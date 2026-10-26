@@ -5,7 +5,7 @@ A fictional, harmless puzzle game built with static HTML, CSS, and vanilla JavaS
 ## What is included
 
 - A 1,000-level progressive campaign with a paginated level map, difficulty badges, score, hints, skips, retries, saved progress, and a final victory screen.
-- Question modes for Aptitude, Reasoning, Verbal Ability, General Knowledge, and Mixed Challenge.
+- Practice categories for Aptitude, Reasoning (including Date and Time and Family Relations), Verbal Ability, General Knowledge, and Puzzle Solving, plus Mixed Practice.
 - Quick Play (10), Challenge (25), Endless Practice, Daily Challenge, and Custom Practice.
 - Multiple-choice, typed, object-selection, ordered-click, memory, and moving-button puzzles.
 - Local randomized sessions, recent-question avoidance, progress restoration, and a responsive dark thriller theme.
@@ -13,32 +13,34 @@ A fictional, harmless puzzle game built with static HTML, CSS, and vanilla JavaS
 
 ## Actual question counts
 
-The validated practice bank contains **80 unique, newly authored questions**:
+The validated practice bank contains **200 unique, newly authored questions**:
 
 | Category | Unique questions |
 | --- | ---: |
-| Aptitude | 20 |
-| Reasoning | 20 |
-| Verbal Ability | 20 |
-| General Knowledge | 20 |
-| **Total** | **80** |
+| Aptitude | 40 |
+| Reasoning | 50 |
+| Verbal Ability | 40 |
+| General Knowledge | 40 |
+| Puzzle Solving | 30 |
+| **Total** | **200** |
 
-The campaign has exactly 1,000 numbered levels. Its first 100 preserve the existing puzzle progression, classified under Reasoning. Levels 101–1,000 cycle through the 80-question practice bank with distinct level numbers and “Echo” titles. The campaign therefore does not contain 1,000 unique questions. Practice sessions select from the unique question bank and do not repeat an ID within a session.
+The campaign has exactly 1,000 numbered levels. Its difficulty progression, save state, score, hints, skips, retries, map, and victory state remain intact. Campaign questions now come from the exam-oriented bank; it cycles through the 200 unique questions and does not claim that 1,000 different questions are present. Practice sessions never repeat an ID within a session.
 
-The bank is deliberately smaller than the target of 250 questions per category. Counts reflect only validated, unique questions; no placeholders or repeated templates are used to inflate them.
+Mixed Practice has 200 eligible questions across all difficulties, so it can start any supported session size from 100 through 200 in 10-question increments. Requests above the eligible pool after applying filters are rejected with the matching unique-question count; they are never filled with duplicates. A single category or topic may contain fewer than 100 questions.
 
 ### Reference PDF status
 
-`LogicWhile Aptitude and Reasoning Material.pdf` was not present in the repository or the files available to this development environment. No question currently claims to come from that document: all 80 practice questions are marked `newly-authored`, with a null PDF page reference. To enable a PDF-grounded update, place the document at `references/LogicWhile Aptitude and Reasoning Material.pdf` in the project or provide extracted text with its verified page numbers and topic headings. The material can then be reviewed and converted into original, independently checked questions without copying long passages verbatim.
+`LogicWhile Aptitude and Reasoning Material.pdf` was not present in the repository or the files available to this development environment. No question currently claims to come from that document: all 200 questions are marked `newly-authored`, with a null PDF page reference. To enable a PDF-grounded update, place the document at `references/LogicWhile Aptitude and Reasoning Material.pdf` in the project or provide extracted text with its verified page numbers and topic headings. The material can then be reviewed and converted into original, independently checked questions without copying long passages verbatim.
 
 ## Categories and modes
 
-- **Aptitude:** percentages, profit and loss, ratios, averages, interest, work, speed, probability, and arithmetic.
-- **Reasoning:** sequences, analogies, codes, directions, syllogisms, ranking, patterns, deduction, and the preserved campaign puzzles.
+- **Aptitude:** percentages, profit and loss, ratios, averages, simple and compound interest, work, speed, probability, combinations, and arithmetic.
+- **Reasoning:** number/alphabet sequences, analogies, codes, directions, syllogisms, ranking, patterns, deduction, calendar reasoning, clock angles, and family relations.
 - **Verbal Ability:** grammar, parts of speech, tenses, agreement, sentence correction, vocabulary, idioms, voice, reported speech, cloze, sentence ordering, and reading comprehension.
-- **General Knowledge:** stable facts about Indian history and polity, geography, science, space, the environment, books, organizations, and computing. The bank avoids live/current-affairs claims.
+- **General Knowledge:** static facts about Indian history and polity, geography, science, space, the environment, books, organizations, and computing. Current affairs are not included: the static site has no verified live feed or update process.
+- **Puzzle Solving:** original number, missing-number, pattern, arrangement, constraint, and multi-step deduction puzzles.
 
-Select a category and mode on the **Question modes** screen. Mixed Challenge samples all four categories. Custom Practice lets you choose difficulty and a count from 1 to 50.
+Select one or more categories on the **Question modes** screen, or select Mixed Practice to include all categories. Custom Practice filters by difficulty and topic, supports timed or untimed play, optional question shuffling and explanation display, and accepts question counts from 100 to 200 in steps of 10. The available-pool message updates as filters change; the 200-question mixed bank supports every valid session count. No questions are repeated to meet a count.
 
 ## Randomization and daily sets
 
@@ -50,7 +52,7 @@ Daily Challenge selects deterministically using the device's local calendar date
 
 ## Progress and privacy
 
-Campaign progress uses the `impossible-captcha-save` localStorage key. Practice progress and recent question IDs use separate versioned local keys. The active practice session resumes after refresh; a paused practice session can be resumed from the mode screen. The campaign save migrates existing version-1 (50-level) and version-2 (100-level) progress. Existing saved practice sessions that used the retired category are restored under Reasoning.
+Campaign progress uses the `impossible-captcha-save` localStorage key. Practice progress and recent question IDs use separate versioned local keys. The active practice session resumes after refresh, including its question order and timed-question deadline; a paused practice session can be resumed from the mode screen. The campaign save migrates existing version-1 (50-level) and version-2 (100-level) progress.
 
 Browser storage belongs to that browser and may be cleared by the user. It is not synced to other devices, secure against manual editing, or sent to a server. **Restart all progress** on the level map asks for confirmation and clears campaign and practice history while preserving the sound preference.
 
@@ -58,8 +60,7 @@ Browser storage belongs to that browser and may be cleared by the user. It is no
 
 - `index.html` — screens, category controls, and relative asset references.
 - `style.css` — theme, responsive layout, focus styles, and reduced-motion support.
-- `level-data.js` — the 100 legacy campaign puzzle definitions.
-- `question-bank.js` — structured Aptitude, Reasoning, Verbal Ability, and General Knowledge questions, with solution and source metadata.
+- `question-bank.js` — structured Aptitude, Reasoning, Verbal Ability, General Knowledge, and Puzzle Solving questions, with solution and source metadata.
 - `game-core.js` — 1,000-level campaign, question validation, random sessions, scoring, and save migration.
 - `script.js` — UI, campaign and practice game flow, and localStorage integration.
 - `tests/game.test.js` — Node's built-in automated test suite.
@@ -68,7 +69,7 @@ Browser storage belongs to that browser and may be cleared by the user. It is no
 
 ## Add questions
 
-Add new records to `question-bank.js` using the existing question fields: unique `id`, `categoryId`, `category`, `difficulty`, `topic`, `title`, `question`, `type`, `options` (for multiple choice), `answer`, `instructions`, `hint`, `explanation`, `solution`, `formula` where relevant, `sourceType`, `sourceTopic`, `sourcePage`, success/failure text, and difficulty-based `points`. Mark original questions as `newly-authored` with `sourcePage: null`; use `pdf-derived` only when the source content and positive page number have been verified.
+Add new records to `question-bank.js` using the existing question fields: unique `id`, `categoryId`, `category`, `difficulty`, `topic`, `title`, `question`, `type`, `options` (for multiple choice), `answer`, `instructions`, `hint`, `explanation`, `solution`, `formula` where relevant, `sourceType`, `sourceTopic`, `sourcePage`, success/failure text, and difficulty-based `points`. Mark original questions as `newly-authored` with `sourcePage: null`; use `pdf-derived` only when the source content and positive page number have been verified. Mark static General Knowledge with `knowledgeType: "static"`; do not add time-sensitive questions without a dated, verified source and an update process.
 
 Use new IDs and original questions. Make sure exactly one multiple-choice option matches the answer (respecting `caseSensitive` where needed). Avoid unsupported current-affairs claims. The runtime and tests validate required fields, category/difficulty values, duplicate IDs/questions, answers, and options.
 
@@ -82,7 +83,7 @@ Use new IDs and original questions. Make sure exactly one multiple-choice option
    node --test tests/game.test.js
    ```
 
-No `npm install` or build command is needed. The test suite checks all 1,000 campaign IDs, the actual unique bank and category counts, question source metadata, answer validation, progression, scoring, migration, randomized sessions, recent-question filtering, mixed-category balance, daily determinism, and relative GitHub Pages assets.
+No `npm install` or build command is needed. The test suite checks all 1,000 campaign IDs, the actual unique bank and category counts, question source metadata, answer validation, custom count/filter behavior, progression, scoring, migration, randomized sessions, recent-question filtering, mixed-category balance, daily determinism, and relative GitHub Pages assets.
 
 ## GitHub Pages deployment
 
@@ -110,7 +111,7 @@ After reviewing for unrelated files or secrets, run:
 
 ```sh
 git add .
-git commit -m "Upgrade Impossible CAPTCHA to 1000 levels"
+git commit -m "Upgrade aptitude reasoning verbal and puzzles"
 git push
 ```
 
@@ -118,9 +119,9 @@ git push
 
 ## Troubleshooting
 
-- **A script or style is missing:** confirm `index.html`, `style.css`, `level-data.js`, `question-bank.js`, `game-core.js`, and `script.js` are in the repository root with exact filename capitalization.
+- **A script or style is missing:** confirm `index.html`, `style.css`, `question-bank.js`, `game-core.js`, and `script.js` are in the repository root with exact filename capitalization.
 - **Progress is not on another device:** localStorage is device- and browser-specific.
 - **Saved practice does not load:** malformed or outdated practice data is ignored; start a new session. Campaign saves from prior releases are migrated where supported.
-- **Random questions look familiar:** the unique pool is currently 160 questions; after the unseen pool is exhausted, older questions can be reused. The 1,000-level campaign intentionally cycles the bank.
+- **The requested custom count is unavailable:** inspect the displayed unique-question count, lower the request in valid 10-question steps (not below 100), clear a topic/difficulty filter, or choose more categories. The current total bank contains 200 questions.
 - **The deployed page is old or missing:** verify the Pages source and branch, confirm the latest deployment succeeded, and hard-refresh after it finishes.
 - **Push fails:** read the actual Git error and inspect `git status` and the configured remote. Do not use force push as a routine fix.

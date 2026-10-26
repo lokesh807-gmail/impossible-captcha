@@ -28,48 +28,48 @@ test("campaign contains exactly 1000 consecutive levels and preserves the origin
   assert.deepEqual(core.DIFFICULTIES.slice(0, 100), REQUIRED_SEQUENCE);
   assert.deepEqual(core.LEVELS.slice(0, 100).map(level => level.difficulty), REQUIRED_SEQUENCE);
   assert.equal(new Set(core.LEVELS.map(level => level.title)).size, 1000);
-  assert.equal(core.QUESTION_BANK.length, 80);
-  assert.equal(new Set(core.QUESTION_BANK.map(question => question.id)).size, 80);
-  assert.equal(new Set(core.QUESTION_BANK.map(question => question.question)).size, 80);
+  assert.equal(core.QUESTION_BANK.length, 200);
+  assert.equal(new Set(core.QUESTION_BANK.map(question => question.id)).size, 200);
+  assert.equal(new Set(core.QUESTION_BANK.map(question => question.question)).size, 200);
   assert.equal(core.LEVELS[999].finalBoss, true);
   assert.equal(core.LEVELS[999].id, 1000);
   assert.equal(core.LEVELS.some(level => level.id === 1001), false);
 });
 
-test("question bank has unique validated questions in all four categories", () => {
+test("question bank has unique validated questions in all supported categories", () => {
   assert.deepEqual(core.validateQuestionBank(core.QUESTION_BANK), { valid: true, problems: [] });
   assert.deepEqual(Object.fromEntries(core.CATEGORIES.map(category => [
     category,
     core.QUESTION_BANK.filter(question => question.categoryId === category).length
   ])), {
-    aptitude: 20,
-    reasoning: 20,
-    "verbal-ability": 20,
-    "general-knowledge": 20
+    aptitude: 40,
+    reasoning: 50,
+    "verbal-ability": 40,
+    "general-knowledge": 40,
+    "puzzle-solving": 30
   });
-  assert.deepEqual(core.CATEGORIES, ["aptitude", "reasoning", "verbal-ability", "general-knowledge"]);
+  assert.deepEqual(core.CATEGORIES, ["aptitude", "reasoning", "verbal-ability", "general-knowledge", "puzzle-solving"]);
   assert.ok(core.QUESTION_BANK.every(question => question.sourceType === "newly-authored" && question.sourcePage === null));
   assert.ok(core.QUESTION_BANK.every(question => question.sourceTopic && question.solution));
   assert.ok(core.QUESTION_BANK.filter(question => question.categoryId === "aptitude" && question.formula).length >= 10);
   const verbal = core.QUESTION_BANK.filter(question => question.categoryId === "verbal-ability");
-  assert.equal(verbal.length, 20);
+  assert.equal(verbal.length, 40);
   assert.ok(verbal.some(question => question.passage && question.topic === "Reading comprehension"));
   assert.ok(verbal.every(question => question.options.length === 4));
-  assert.ok(core.LEVELS.slice(0, 100).every(level => level.categoryId === "reasoning"));
+  assert.ok(core.QUESTION_BANK.filter(question => question.categoryId === "general-knowledge").every(question => question.knowledgeType === "static"));
+  assert.equal(core.QUESTION_BANK.filter(question => question.categoryId === "puzzle-solving").length, 30);
+  assert.ok(core.LEVELS.slice(0, core.QUESTION_BANK.length).every((level, index) => level.questionId === core.QUESTION_BANK[index].id));
+  assert.equal(new Set(core.LEVELS.slice(0, core.QUESTION_BANK.length).map(level => level.questionId)).size, core.QUESTION_BANK.length);
+  const newYearQuestion = core.QUESTION_BANK.find(question => question.id === "rea-21");
+  assert.equal(new Date(Date.UTC(2024, 0, 1)).getUTCDay(), 1);
+  assert.equal(new Date(Date.UTC(2025, 0, 1)).getUTCDay(), 3);
+  assert.equal(core.validateAnswer(newYearQuestion, "Wednesday"), true);
 });
 
-test("all supported puzzle types appear and every level accepts its solution but rejects a wrong one", () => {
-  const types = new Set(core.LEVELS.map(level => level.type));
-  for (const type of ["multiple-choice", "text", "grid", "order", "memory", "runaway"]) assert.ok(types.has(type), `${type} must be represented`);
+test("campaign contains non-prank authored questions and every level accepts its solution", () => {
+  assert.ok(core.LEVELS.every(level => level.sourceType === "newly-authored"));
   for (const level of core.LEVELS) {
-    const intended = level.type === "text" && Array.isArray(level.answer) ? level.answer[0] : level.answer;
-    assert.equal(core.validateAnswer(level, intended), true, `Level ${level.id} must accept its intended solution`);
-    const wrong = level.type === "grid"
-      ? []
-      : ["order", "memory"].includes(level.type)
-        ? [...level.answer].reverse()
-        : "__not_the_answer__";
-    assert.equal(core.validateAnswer(level, wrong), false, `Level ${level.id} must reject an incorrect solution`);
+    assert.equal(core.validateAnswer(level, level.answer), true, `Level ${level.id} must accept its intended solution`);
   }
 });
 
@@ -88,7 +88,11 @@ test("each multiple-choice puzzle has one valid displayed answer and rejects its
 });
 
 test("grid validation requires exactly the intended unique selection", () => {
-  const level = core.LEVELS.find(item => item.type === "grid" && item.answer.length > 1);
+  const level = {
+    type: "grid",
+    answer: [1, 3],
+    objects: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }]
+  };
   const correct = [...level.answer];
   assert.equal(core.validateAnswer(level, [...correct].reverse()), true);
   assert.equal(core.validateAnswer(level, [...correct, correct[0]]), true);
@@ -264,14 +268,52 @@ test("endless practice includes the complete category pool, unseen first, withou
   assert.ok(aptitude.slice(8).every(question => session.questionIds.includes(question.id)));
 });
 
+test("custom practice enforces exact counts, selected categories, difficulty and topic filters", () => {
+  const allCategories = core.createQuestionSession(core.QUESTION_BANK, {
+    mode: "custom", category: "mixed", categories: core.CATEGORIES, count: 100, topic: "all", crypto: seededCrypto(200)
+  });
+  assert.equal(allCategories.questions.length, 100);
+  assert.equal(new Set(allCategories.questionIds).size, 100);
+  assert.deepEqual(new Set(allCategories.questions.map(question => question.categoryId)), new Set(core.CATEGORIES));
+  const maxSizeSession = core.createQuestionSession(core.QUESTION_BANK, {
+    mode: "custom", category: "mixed", categories: core.CATEGORIES, count: 200, topic: "all", crypto: seededCrypto(200)
+  });
+  assert.equal(maxSizeSession.questions.length, 200);
+  assert.equal(new Set(maxSizeSession.questionIds).size, 200);
+  assert.throws(() => core.createQuestionSession(core.QUESTION_BANK, {
+    mode: "custom", category: "aptitude", categories: ["aptitude"], count: 100
+  }), error => error.availableCount === 40 && /Only 40 unique questions/.test(error.message));
+  assert.throws(() => core.createQuestionSession(core.QUESTION_BANK, {
+    mode: "custom", category: "mixed", categories: core.CATEGORIES, count: 210
+  }), /100 to 200 in steps of 10/);
+  for (const invalidCount of [90, 105]) {
+    assert.throws(() => core.createQuestionSession(core.QUESTION_BANK, {
+      mode: "custom", category: "mixed", categories: core.CATEGORIES, count: invalidCount
+    }), /100 to 200 in steps of 10/);
+  }
+  const filtered = core.createQuestionSession(core.QUESTION_BANK, {
+    mode: "quick", category: "reasoning", categories: ["reasoning"], difficulty: "hard", topic: "Date and time — clock angles", count: 1
+  });
+  assert.deepEqual(filtered.questionIds, ["rea-22"]);
+  const originalOrder = core.QUESTION_BANK.slice(0, 3);
+  const unshuffled = core.createQuestionSession(originalOrder, {
+    mode: "quick", category: "aptitude", categories: ["aptitude"], count: 3, randomOrder: false
+  });
+  assert.deepEqual(unshuffled.questionIds, originalOrder.map(question => question.id));
+});
+
 test("static GitHub Pages asset references resolve from the repository root", () => {
   const root = path.join(__dirname, "..");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
-  assert.doesNotMatch(html, /Tricky Questions|value="tricky"/i);
   const categoryValues = [...html.matchAll(/name="category" value="([^"]+)"/g)].map(match => match[1]);
-  assert.deepEqual(categoryValues, ["aptitude", "reasoning", "verbal-ability", "general-knowledge"]);
-  assert.match(html, /option value="mixed"/);
-  for (const asset of ["style.css", "level-data.js", "question-bank.js", "game-core.js", "script.js"]) {
+  assert.deepEqual(categoryValues, [...core.CATEGORIES, "mixed"]);
+  assert.match(html, /label for="practice-count">Question count \(100–200\)<\/label>/);
+  assert.match(html, /id="practice-count"[^>]*min="100"[^>]*max="200"[^>]*step="10"[^>]*value="100"/);
+  assert.match(html, /name="mode">/);
+  assert.match(html, /id="practice-topic"/);
+  assert.match(html, /id="practice-timed"/);
+  assert.match(html, /id="practice-show-explanations"/);
+  for (const asset of ["style.css", "question-bank.js", "game-core.js", "script.js"]) {
     assert.ok(html.includes(`./${asset}`), `${asset} should be referenced relatively`);
     assert.ok(fs.existsSync(path.join(root, asset)), `${asset} should exist at the site root`);
   }

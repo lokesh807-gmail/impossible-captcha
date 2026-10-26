@@ -1,0 +1,171 @@
+[1mdiff --git a/README.md b/README.md[m
+[1mindex 9131539..24103f1 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -5,7 +5,7 @@[m [mA fictional, harmless puzzle game built with static HTML, CSS, and vanilla JavaS[m
+ ## What is included[m
+ [m
+ - A 1,000-level progressive campaign with a paginated level map, difficulty badges, score, hints, skips, retries, saved progress, and a final victory screen.[m
+[31m-- Question modes for Aptitude, Reasoning, Verbal Ability, General Knowledge, and Mixed Challenge.[m
+[32m+[m[32m- Practice categories for Aptitude, Reasoning (including Date and Time and Family Relations), Verbal Ability, General Knowledge, and Puzzle Solving, plus Mixed Practice.[m
+ - Quick Play (10), Challenge (25), Endless Practice, Daily Challenge, and Custom Practice.[m
+ - Multiple-choice, typed, object-selection, ordered-click, memory, and moving-button puzzles.[m
+ - Local randomized sessions, recent-question avoidance, progress restoration, and a responsive dark thriller theme.[m
+[36m@@ -13,32 +13,34 @@[m [mA fictional, harmless puzzle game built with static HTML, CSS, and vanilla JavaS[m
+ [m
+ ## Actual question counts[m
+ [m
+[31m-The validated practice bank contains **80 unique, newly authored questions**:[m
+[32m+[m[32mThe validated practice bank contains **200 unique, newly authored questions**:[m
+ [m
+ | Category | Unique questions |[m
+ | --- | ---: |[m
+[31m-| Aptitude | 20 |[m
+[31m-| Reasoning | 20 |[m
+[31m-| Verbal Ability | 20 |[m
+[31m-| General Knowledge | 20 |[m
+[31m-| **Total** | **80** |[m
+[32m+[m[32m| Aptitude | 40 |[m
+[32m+[m[32m| Reasoning | 50 |[m
+[32m+[m[32m| Verbal Ability | 40 |[m
+[32m+[m[32m| General Knowledge | 40 |[m
+[32m+[m[32m| Puzzle Solving | 30 |[m
+[32m+[m[32m| **Total** | **200** |[m
+ [m
+[31m-The campaign has exactly 1,000 numbered levels. Its first 100 preserve the existing puzzle progression, classified under Reasoning. Levels 101–1,000 cycle through the 80-question practice bank with distinct level numbers and “Echo” titles. The campaign therefore does not contain 1,000 unique questions. Practice sessions select from the unique question bank and do not repeat an ID within a session.[m
+[32m+[m[32mThe campaign has exactly 1,000 numbered levels. Its difficulty progression, save state, score, hints, skips, retries, map, and victory state remain intact. Campaign questions now come from the exam-oriented bank; it cycles through the 200 unique questions and does not claim that 1,000 different questions are present. Practice sessions never repeat an ID within a session.[m
+ [m
+[31m-The bank is deliberately smaller than the target of 250 questions per category. Counts reflect only validated, unique questions; no placeholders or repeated templates are used to inflate them.[m
+[32m+[m[32mMixed Practice has 200 eligible questions across all difficulties, so it can start any supported session size from 100 through 200 in 10-question increments. Requests above the eligible pool after applying filters are rejected with the matching unique-question count; they are never filled with duplicates. A single category or topic may contain fewer than 100 questions.[m
+ [m
+ ### Reference PDF status[m
+ [m
+[31m-`LogicWhile Aptitude and Reasoning Material.pdf` was not present in the repository or the files available to this development environment. No question currently claims to come from that document: all 80 practice questions are marked `newly-authored`, with a null PDF page reference. To enable a PDF-grounded update, place the document at `references/LogicWhile Aptitude and Reasoning Material.pdf` in the project or provide extracted text with its verified page numbers and topic headings. The material can then be reviewed and converted into original, independently checked questions without copying long passages verbatim.[m
+[32m+[m[32m`LogicWhile Aptitude and Reasoning Material.pdf` was not present in the repository or the files available to this development environment. No question currently claims to come from that document: all 200 questions are marked `newly-authored`, with a null PDF page reference. To enable a PDF-grounded update, place the document at `references/LogicWhile Aptitude and Reasoning Material.pdf` in the project or provide extracted text with its verified page numbers and topic headings. The material can then be reviewed and converted into original, independently checked questions without copying long passages verbatim.[m
+ [m
+ ## Categories and modes[m
+ [m
+[31m-- **Aptitude:** percentages, profit and loss, ratios, averages, interest, work, speed, probability, and arithmetic.[m
+[31m-- **Reasoning:** sequences, analogies, codes, directions, syllogisms, ranking, patterns, deduction, and the preserved campaign puzzles.[m
+[32m+[m[32m- **Aptitude:** percentages, profit and loss, ratios, averages, simple and compound interest, work, speed, probability, combinations, and arithmetic.[m
+[32m+[m[32m- **Reasoning:** number/alphabet sequences, analogies, codes, directions, syllogisms, ranking, patterns, deduction, calendar reasoning, clock angles, and family relations.[m
+ - **Verbal Ability:** grammar, parts of speech, tenses, agreement, sentence correction, vocabulary, idioms, voice, reported speech, cloze, sentence ordering, and reading comprehension.[m
+[31m-- **General Knowledge:** stable facts about Indian history and polity, geography, science, space, the environment, books, organizations, and computing. The bank avoids live/current-affairs claims.[m
+[32m+[m[32m- **General Knowledge:** static facts about Indian history and polity, geography, science, space, the environment, books, organizations, and computing. Current affairs are not included: the static site has no verified live feed or update process.[m
+[32m+[m[32m- **Puzzle Solving:** original number, missing-number, pattern, arrangement, constraint, and multi-step deduction puzzles.[m
+ [m
+[31m-Select a category and mode on the **Question modes** screen. Mixed Challenge samples all four categories. Custom Practice lets you choose difficulty and a count from 1 to 50.[m
+[32m+[m[32mSelect one or more categories on the **Question modes** screen, or select Mixed Practice to include all categories. Custom Practice filters by difficulty and topic, supports timed or untimed play, optional question shuffling and explanation display, and accepts question counts from 100 to 200 in steps of 10. The available-pool message updates as filters change; the 200-question mixed bank supports every valid session count. No questions are repeated to meet a count.[m
+ [m
+ ## Randomization and daily sets[m
+ [m
+[36m@@ -50,7 +52,7 @@[m [mDaily Challenge selects deterministically using the device's local calendar date[m
+ [m
+ ## Progress and privacy[m
+ [m
+[31m-Campaign progress uses the `impossible-captcha-save` localStorage key. Practice progress and recent question IDs use separate versioned local keys. The active practice session resumes after refresh; a paused practice session can be resumed from the mode screen. The campaign save migrates existing version-1 (50-level) and version-2 (100-level) progress. Existing saved practice sessions that used the retired category are restored under Reasoning.[m
+[32m+[m[32mCampaign progress uses the `impossible-captcha-save` localStorage key. Practice progress and recent question IDs use separate versioned local keys. The active practice session resumes after refresh, including its question order and timed-question deadline; a paused practice session can be resumed from the mode screen. The campaign save migrates existing version-1 (50-level) and version-2 (100-level) progress.[m
+ [m
+ Browser storage belongs to that browser and may be cleared by the user. It is not synced to other devices, secure against manual editing, or sent to a server. **Restart all progress** on the level map asks for confirmation and clears campaign and practice history while preserving the sound preference.[m
+ [m
+[36m@@ -58,8 +60,7 @@[m [mBrowser storage belongs to that browser and may be cleared by the user. It is no[m
+ [m
+ - `index.html` — screens, category controls, and relative asset references.[m
+ - `style.css` — theme, responsive layout, focus styles, and reduced-motion support.[m
+[31m-- `level-data.js` — the 100 legacy campaign puzzle definitions.[m
+[31m-- `question-bank.js` — structured Aptitude, Reasoning, Verbal Ability, and General Knowledge questions, with solution and source metadata.[m
+[32m+[m[32m- `question-bank.js` — structured Aptitude, Reasoning, Verbal Ability, General Knowledge, and Puzzle Solving questions, with solution and source metadata.[m
+ - `game-core.js` — 1,000-level campaign, question validation, random sessions, scoring, and save migration.[m
+ - `script.js` — UI, campaign and practice game flow, and localStorage integration.[m
+ - `tests/game.test.js` — Node's built-in automated test suite.[m
+[36m@@ -68,7 +69,7 @@[m [mBrowser storage belongs to that browser and may be cleared by the user. It is no[m
+ [m
+ ## Add questions[m
+ [m
+[31m-Add new records to `question-bank.js` using the existing question fields: unique `id`, `categoryId`, `category`, `difficulty`, `topic`, `title`, `question`, `type`, `options` (for multiple choice), `answer`, `instructions`, `hint`, `explanation`, `solution`, `formula` where relevant, `sourceType`, `sourceTopic`, `sourcePage`, success/failure text, and difficulty-based `points`. Mark original questions as `newly-authored` with `sourcePage: null`; use `pdf-derived` only when the source content and positive page number have been verified.[m
+[32m+[m[32mAdd new records to `question-bank.js` using the existing question fields: unique `id`, `categoryId`, `category`, `difficulty`, `topic`, `title`, `question`, `type`, `options` (for multiple choice), `answer`, `instructions`, `hint`, `explanation`, `solution`, `formula` where relevant, `sourceType`, `sourceTopic`, `sourcePage`, success/failure text, and difficulty-based `points`. Mark original questions as `newly-authored` with `sourcePage: null`; use `pdf-derived` only when the source content and positive page number have been verified. Mark static General Knowledge with `knowledgeType: "static"`; do not add time-sensitive questions without a dated, verified source and an update process.[m
+ [m
+ Use new IDs and original questions. Make sure exactly one multiple-choice option matches the answer (respecting `caseSensitive` where needed). Avoid unsupported current-affairs claims. The runtime and tests validate required fields, category/difficulty values, duplicate IDs/questions, answers, and options.[m
+ [m
+[36m@@ -82,7 +83,7 @@[m [mUse new IDs and original questions. Make sure exactly one multiple-choice option[m
+    node --test tests/game.test.js[m
+    ```[m
+ [m
+[31m-No `npm install` or build command is needed. The test suite checks all 1,000 campaign IDs, the actual unique bank and category counts, question source metadata, answer validation, progression, scoring, migration, randomized sessions, recent-question filtering, mixed-category balance, daily determinism, and relative GitHub Pages assets.[m
+[32m+[m[32mNo `npm install` or build command is needed. The test suite checks all 1,000 campaign IDs, the actual unique bank and category counts, question source metadata, answer validation, custom count/filter behavior, progression, scoring, migration, randomized sessions, recent-question filtering, mixed-category balance, daily determinism, and relative GitHub Pages assets.[m
+ [m
+ ## GitHub Pages deployment[m
+ [m
+[36m@@ -110,7 +111,7 @@[m [mAfter reviewing for unrelated files or secrets, run:[m
+ [m
+ ```sh[m
+ git add .[m
+[31m-git commit -m "Upgrade Impossible CAPTCHA to 1000 levels"[m
+[32m+[m[32mgit commit -m "Upgrade aptitude reasoning verbal and puzzles"[m
+ git push[m
+ ```[m
+ [m
+[36m@@ -118,9 +119,9 @@[m [mgit push[m
+ [m
+ ## Troubleshooting[m
+ [m
+[31m-- **A script or style is missing:** confirm `index.html`, `style.css`, `level-data.js`, `question-bank.js`, `game-core.js`, and `script.js` are in the repository root with exact filename capitalization.[m
+[32m+[m[32m- **A script or style is missing:** confirm `index.html`, `style.css`, `question-bank.js`, `game-core.js`, and `script.js` are in the repository root with exact filename capitalization.[m
+ - **Progress is not on another device:** localStorage is device- and browser-specific.[m
+ - **Saved practice does not load:** malformed or outdated practice data is ignored; start a new session. Campaign saves from prior releases are migrated where supported.[m
+[31m-- **Random questions look familiar:** the unique pool is currently 160 questions; after the unseen pool is exhausted, older questions can be reused. The 1,000-level campaign intentionally cycles the bank.[m
+[32m+[m[32m- **The requested custom count is unavailable:** inspect the displayed unique-question count, lower the request in valid 10-question steps (not below 100), clear a topic/difficulty filter, or choose more categories. The current total bank contains 200 questions.[m
+ - **The deployed page is old or missing:** verify the Pages source and branch, confirm the latest deployment succeeded, and hard-refresh after it finishes.[m
+ - **Push fails:** read the actual Git error and inspect `git status` and the configured remote. Do not use force push as a routine fix.[m
+[1mdiff --git a/game-core.js b/game-core.js[m
+[1mindex dec7abc..dd1417f 100644[m
+[1m--- a/game-core.js[m
+[1m+++ b/game-core.js[m
+[36m@@ -1,10 +1,9 @@[m
+ (function (root, factory) {[m
+[31m-  const levelData = typeof module === "object" && module.exports ? require("./level-data.js") : root && root.LevelData;[m
+   const questionBank = typeof module === "object" && module.exports ? require("./question-bank.js") : root && root.QuestionBank;[m
+[31m-  const api = factory(levelData, questionBank);[m
+[32m+[m[32m  const api = factory(questionBank);[m
+   if (typeof module === "object" && module.exports) module.exports = api;[m
+   if (root) root.GameCore = api;[m
+[31m-})(typeof globalThis !== "undefined" ? globalThis : this, function (levelData, questionBank) {[m
+[32m+[m[32m})(typeof globalThis !== "undefined" ? globalThis : this, function (questionBank) {[m
+   "use strict";[m
+ [m
+   const BASE_POINTS = { easy: 100, medium: 200, hard: 300 };[m
+[36m@@ -12,7 +11,7 @@[m
+   const SAVE_VERSION = 3;[m
+   const LEGACY_LEVEL_COUNT = 50;[m
+   const TOTAL_LEVELS = 1000;[m
+[31m-  const CATEGORIES = ["aptitude", "reasoning", "verbal-ability", "general-knowledge"];[m
+[32m+[m[32m  const CATEGORIES = ["aptitude", "reasoning", "verbal-ability", "general-knowledge", "puzzle-solving"];[m
+   const legacyDifficulty = [[m
+     "easy", "hard", "medium", "medium", "easy", "hard", "easy", "medium", "hard", "medium",[m
+     "hard", "easy", "medium", "easy", "hard", "medium", "easy", "hard", "medium", "hard",[m
+[36m@@ -38,30 +37,18 @@[m
+     return sequence[(levelId - 1) % sequence.length];[m
+   }[m
+ [m
+[31m-  const curatedQuestions = (levelData || []).map((level, index) => Object.assign({}, level, {[m
+[31m-    id: `legacy-rea-${String(index + 1).padStart(3, "0")}`,[m
+[31m-    categoryId: "reasoning",[m
+[31m-    category: "Reasoning",[m
+[31m-    topic: level.category,[m
+[31m-    sourceTopic: level.category,[m
+[31m-    difficulty: legacyDifficulty[index],[m
+[31m-    points: BASE_POINTS[legacyDifficulty[index]],[m
+[31m-    sourceType: "newly-authored",[m
+[31m-    sourcePage: null,[m
+[31m-    formula: null,[m
+[31m-    solution: level.explanation[m
+[31m-  }));[m
+   const QUESTION_BANK = [...(questionBank || [])];[m
+   const LEVELS = Array.from({ length: TOTAL_LEVELS }, (_, index) => {[m
+     const levelId = index + 1;[m
+[31m-    const question = levelId <= (levelData || []).length[m
+[31m-      ? curatedQuestions[index][m
+[31m-      : QUESTION_BANK[(levelId - (levelData || []).length - 1) % QUESTION_BANK.length];[m
+[31m-    const difficulty = levelId <= legacyDifficulty.length ? legacyDifficulty[index] : difficultyForLevel(levelId);[m
+[32m+[m[32m    const sourceQuestion = QUESTION_BANK[index % QUESTION_BANK.length];[m
+[32m+[m[32m  

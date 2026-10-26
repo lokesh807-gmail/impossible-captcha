@@ -7,7 +7,6 @@
     <meta name="description" content="A fictional, harmless 1,000-level puzzle game with randomized question practice.">
     <title>Impossible CAPTCHA — 1,000 Levels of Brain Confusion</title>
     <link rel="stylesheet" href="./style.css">
-    <script src="./level-data.js" defer></script>
     <script src="./question-bank.js" defer></script>
     <script src="./game-core.js" defer></script>
     <script src="./script.js" defer></script>
@@ -121,6 +120,7 @@
           </div>
           <div class="challenge-footer">
             <span id="attempt-count">Attempts this level: 0</span>
+            <span id="practice-timer" class="practice-timer hidden" role="timer" aria-live="off"></span>
             <span id="earned-points"></span>
           </div>
         </article>
@@ -134,10 +134,12 @@
           <fieldset class="category-picker">
             <legend>Choose a category</legend>
             <div class="category-grid">
-              <label class="category-card"><input type="radio" name="category" value="aptitude" checked><span class="category-icon" aria-hidden="true">∑</span><strong>Aptitude</strong><span>Numbers, percentages, work, and probability</span></label>
-              <label class="category-card"><input type="radio" name="category" value="reasoning"><span class="category-icon" aria-hidden="true">⌘</span><strong>Reasoning</strong><span>Patterns, logic, codes, and deductions</span></label>
-              <label class="category-card"><input type="radio" name="category" value="verbal-ability"><span class="category-icon" aria-hidden="true">Aa</span><strong>Verbal Ability</strong><span>Grammar, vocabulary, and reading comprehension</span></label>
-              <label class="category-card"><input type="radio" name="category" value="general-knowledge"><span class="category-icon" aria-hidden="true">◉</span><strong>General Knowledge</strong><span>Stable facts about science, history, and the world</span></label>
+              <label class="category-card"><input id="practice-category-aptitude" type="checkbox" name="category" value="aptitude"><span class="category-icon" aria-hidden="true">∑</span><strong>Aptitude</strong><span>Quantitative maths and exam calculations</span></label>
+              <label class="category-card"><input type="checkbox" name="category" value="reasoning"><span class="category-icon" aria-hidden="true">⌘</span><strong>Reasoning</strong><span>Logic, family relations, dates, and patterns</span></label>
+              <label class="category-card"><input type="checkbox" name="category" value="verbal-ability"><span class="category-icon" aria-hidden="true">Aa</span><strong>Verbal Ability</strong><span>Grammar, vocabulary, and comprehension</span></label>
+              <label class="category-card"><input type="checkbox" name="category" value="general-knowledge"><span class="category-icon" aria-hidden="true">◉</span><strong>General Knowledge</strong><span>Static facts; no unverified current affairs</span></label>
+              <label class="category-card"><input type="checkbox" name="category" value="puzzle-solving"><span class="category-icon" aria-hidden="true">▦</span><strong>Puzzle Solving</strong><span>Number, arrangement, and deduction puzzles</span></label>
+              <label class="category-card category-card-mixed"><input type="checkbox" id="mixed-practice" name="category" value="mixed" checked><span class="category-icon" aria-hidden="true">✳</span><strong>Mixed Practice</strong><span>Draw from every enabled category</span></label>
             </div>
           </fieldset>
           <label for="practice-mode">Game mode</label>
@@ -146,7 +148,7 @@
             <option value="challenge">Challenge Mode — 25 questions</option>
             <option value="endless">Endless Practice — all unseen questions</option>
             <option value="daily">Daily Challenge — stable for your local date</option>
-            <option value="mixed">Mixed Challenge — 25 questions from all categories</option>
+            <option value="mixed">Mixed Practice — 25 questions from all categories</option>
             <option value="custom">Custom Practice</option>
           </select>
           <div id="custom-options" class="custom-options hidden">
@@ -157,8 +159,18 @@
               <option value="medium">Medium</option>
               <option value="hard">Hard</option>
             </select>
-            <label for="practice-count">Question count (1–50)</label>
-            <input id="practice-count" name="count" type="number" min="1" max="50" value="10">
+            <label for="practice-topic">Topic</label>
+            <select id="practice-topic" name="topic"><option value="all">All topics</option></select>
+            <label for="practice-count">Question count (100–200)</label>
+            <input id="practice-count" name="count" type="number" min="100" max="200" step="10" value="100" required aria-describedby="practice-availability practice-count-error">
+            <p id="practice-availability" class="muted" role="status" aria-live="polite"></p>
+            <p id="practice-count-error" class="form-error hidden" role="alert"></p>
+            <fieldset class="practice-preferences">
+              <legend>Practice preferences</legend>
+              <label><input id="practice-timed" type="checkbox"> Timed practice (30 seconds per question)</label>
+              <label><input id="practice-random-order" type="checkbox" checked> Shuffle question order</label>
+              <label><input id="practice-show-explanations" type="checkbox" checked> Show explanation after answering</label>
+            </fieldset>
           </div>
           <p id="daily-note" class="muted">Daily Challenge uses today's date on this device. Without a server, users in different time zones may get a different daily set.</p>
           <div class="screen-actions">
@@ -175,17 +187,24 @@
         <h1 id="practice-results-title">The questions <span>are done.</span></h1>
         <div class="results-grid">
           <div><span>FINAL SCORE</span><strong id="results-score">0</strong></div>
+          <div><span>TOTAL QUESTIONS</span><strong id="results-total">0</strong></div>
           <div><span>ACCURACY</span><strong id="results-accuracy">0%</strong></div>
           <div><span>CORRECT</span><strong id="results-correct">0</strong></div>
           <div><span>INCORRECT / SKIPPED QUESTIONS</span><strong id="results-incorrect">0</strong></div>
           <div><span>BEST STREAK</span><strong id="results-streak">0</strong></div>
           <div><span>ANSWER ATTEMPTS</span><strong id="results-attempts">0</strong></div>
+          <div><span>UNANSWERED</span><strong id="results-unanswered">0</strong></div>
           <div><span>TIME</span><strong id="results-time">Not tracked</strong></div>
         </div>
         <p id="results-category" class="muted"></p>
         <p id="results-breakdown" class="muted"></p>
+        <details class="practice-review">
+          <summary>Review answers and explanations</summary>
+          <div id="results-review"></div>
+        </details>
         <div class="screen-actions">
-          <button class="button button-primary" type="button" data-action="modes">New Game</button>
+          <button class="button button-primary" type="button" data-action="restart-practice">Restart practice</button>
+          <button class="button button-secondary" type="button" data-action="modes">New randomized game</button>
           <button class="button button-secondary" type="button" data-action="home">Back home</button>
         </div>
       </section>
@@ -227,7 +246,7 @@
         <p class="eyebrow">CASE CLOSED (MORE OR LESS)</p>
         <h1 id="victory-title">YOU SURVIVED<br><span>ALL 1,000 LEVELS!</span></h1>
         <p class="victory-reveal">Congratulations! Your brain survived the impossible. Your reward? Absolutely nothing. 😂</p>
-        <p class="muted">This was a fictional prank game, not real security verification.</p>
+        <p class="muted">This is a fictional puzzle game, not real security verification.</p>
         <div class="victory-stats">
           <div><span>FINAL SCORE</span><strong id="victory-score">0</strong></div>
           <div><span>LEVELS SOLVED</span><strong id="victory-completed">0 / 1000</strong></div>

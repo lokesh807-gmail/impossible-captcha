@@ -1,10 +1,9 @@
 (function (root, factory) {
-  const levelData = typeof module === "object" && module.exports ? require("./level-data.js") : root && root.LevelData;
   const questionBank = typeof module === "object" && module.exports ? require("./question-bank.js") : root && root.QuestionBank;
-  const api = factory(levelData, questionBank);
+  const api = factory(questionBank);
   if (typeof module === "object" && module.exports) module.exports = api;
   if (root) root.GameCore = api;
-})(typeof globalThis !== "undefined" ? globalThis : this, function (levelData, questionBank) {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (questionBank) {
   "use strict";
 
   const BASE_POINTS = { easy: 100, medium: 200, hard: 300 };
@@ -12,7 +11,7 @@
   const SAVE_VERSION = 3;
   const LEGACY_LEVEL_COUNT = 50;
   const TOTAL_LEVELS = 1000;
-  const CATEGORIES = ["aptitude", "reasoning", "verbal-ability", "general-knowledge"];
+  const CATEGORIES = ["aptitude", "reasoning", "verbal-ability", "general-knowledge", "puzzle-solving"];
   const legacyDifficulty = [
     "easy", "hard", "medium", "medium", "easy", "hard", "easy", "medium", "hard", "medium",
     "hard", "easy", "medium", "easy", "hard", "medium", "easy", "hard", "medium", "hard",
@@ -38,30 +37,18 @@
     return sequence[(levelId - 1) % sequence.length];
   }
 
-  const curatedQuestions = (levelData || []).map((level, index) => Object.assign({}, level, {
-    id: `legacy-rea-${String(index + 1).padStart(3, "0")}`,
-    categoryId: "reasoning",
-    category: "Reasoning",
-    topic: level.category,
-    sourceTopic: level.category,
-    difficulty: legacyDifficulty[index],
-    points: BASE_POINTS[legacyDifficulty[index]],
-    sourceType: "newly-authored",
-    sourcePage: null,
-    formula: null,
-    solution: level.explanation
-  }));
   const QUESTION_BANK = [...(questionBank || [])];
   const LEVELS = Array.from({ length: TOTAL_LEVELS }, (_, index) => {
     const levelId = index + 1;
-    const question = levelId <= (levelData || []).length
-      ? curatedQuestions[index]
-      : QUESTION_BANK[(levelId - (levelData || []).length - 1) % QUESTION_BANK.length];
-    const difficulty = levelId <= legacyDifficulty.length ? legacyDifficulty[index] : difficultyForLevel(levelId);
+    const sourceQuestion = QUESTION_BANK[index % QUESTION_BANK.length];
+    const difficulty = difficultyForLevel(levelId);
+    const question = Object.assign({}, sourceQuestion, {
+      options: sourceQuestion.options ? sourceQuestion.options.slice() : sourceQuestion.options
+    });
     return Object.assign({}, question, {
       id: levelId,
-      questionId: question.id,
-      title: levelId <= (levelData || []).length ? question.title : `${question.title} · Echo ${Math.floor((levelId - 1) / QUESTION_BANK.length) + 1}`,
+      questionId: sourceQuestion.id,
+      title: `${sourceQuestion.title} · Level ${String(levelId).padStart(3, "0")}`,
       difficulty,
       points: BASE_POINTS[difficulty],
       finalBoss: levelId === TOTAL_LEVELS
@@ -104,11 +91,16 @@
   }
 
   function createQuestionSession(questions, options = {}) {
-    const categories = options.category === "mixed" ? CATEGORIES : [options.category || "aptitude"];
+    const categories = options.category === "mixed"
+      ? CATEGORIES
+      : Array.isArray(options.categories) && options.categories.length
+        ? [...new Set(options.categories.filter(category => CATEGORIES.includes(category)))]
+        : [options.category || "aptitude"];
     const difficulty = options.difficulty || "all";
     const eligible = questions.filter(question =>
       categories.includes(question.categoryId)
-      && (difficulty === "all" || question.difficulty === difficulty));
+      && (difficulty === "all" || question.difficulty === difficulty)
+      && (!options.topic || options.topic === "all" || question.topic === options.topic));
     if (!eligible.length) throw new Error("No questions match the selected category and difficulty.");
 
     const daily = options.mode === "daily";
@@ -130,8 +122,8 @@
     const balance = pool => {
       const shuffled = shuffleItems(pool);
       const balanced = [];
-      if (options.category === "mixed") {
-        const categoryOrder = shuffleItems(CATEGORIES);
+      if (categories.length > 1) {
+        const categoryOrder = shuffleItems(categories);
         const buckets = Object.fromEntries(categoryOrder.map(category => [category, {
           easy: [], medium: [], hard: []
         }]));
@@ -154,18 +146,35 @@
       }
       return balanced;
     };
-    const requestedCount = options.mode === "endless" ? eligible.length : Math.min(options.count || 10, eligible.length);
+    const requestedCount = options.mode === "endless" ? eligible.length : (options.count || 10);
+    if (!Number.isInteger(requestedCount) || requestedCount < 1) throw new RangeError("Question count must be a positive whole number.");
+    if (options.mode === "custom" && (requestedCount < 100 || requestedCount > 200 || (requestedCount - 100) % 10 !== 0)) {
+      throw new RangeError("Custom practice count must be from 100 to 200 in steps of 10.");
+    }
+    if (requestedCount > eligible.length) {
+      const error = new RangeError(`Only ${eligible.length} unique questions match these filters; choose more categories or a lower question count.`);
+      error.availableCount = eligible.length;
+      throw error;
+    }
     const selected = daily
       ? balance(eligible).slice(0, requestedCount)
-      : shuffleItems([
-        ...balance(unseen).slice(0, Math.min(requestedCount, unseen.length)),
-        ...balance(seen).slice(0, Math.max(0, requestedCount - unseen.length))
-      ]);
+      : (options.randomOrder === false
+        ? [...unseen, ...seen].slice(0, requestedCount)
+        : shuffleItems([
+          ...balance(unseen).slice(0, Math.min(requestedCount, unseen.length)),
+          ...balance(seen).slice(0, Math.max(0, requestedCount - unseen.length))
+        ]));
     return {
       sessionId: createSessionId(daily ? null : options.crypto, seedText),
       mode: options.mode || "quick",
-      category: options.category || "aptitude",
+      category: options.category === "mixed" || categories.length > 1 ? "mixed" : categories[0],
+      categories,
       difficulty,
+      topic: options.topic || "all",
+      timed: options.timed === true,
+      timeLimitSeconds: options.timed === true ? Math.max(1, Number(options.timeLimitSeconds) || 30) : null,
+      showExplanation: options.showExplanation !== false,
+      randomOrder: options.randomOrder !== false,
       date: daily ? seedText : null,
       questionIds: selected.map(question => question.id),
       questions: selected.map(question => Object.assign({}, question, {
