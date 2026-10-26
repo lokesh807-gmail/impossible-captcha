@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#08090d">
+    <meta name="description" content="A fictional, harmless 100-level CAPTCHA puzzle game.">
+    <title>Impossible CAPTCHA — 100 Levels of Brain Confusion</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="./game-core.js" defer></script>
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="wordmark" href="#" data-action="home" aria-label="Impossible CAPTCHA home">
+        <span class="wordmark-mark" aria-hidden="true">?</span>
+        <span>IMPOSSIBLE <b>CAPTCHA</b></span>
+      </a>
+      <div class="topbar-actions">
+        <span class="save-indicator" id="save-indicator">Progress saves on this device</span>
+        <button class="icon-button" id="sound-toggle" type="button" aria-pressed="false" aria-label="Turn sound on">Sound off</button>
+      </div>
+    </header>
+
+    <main id="app" tabindex="-1">
+      <section class="screen landing-screen" id="landing-screen" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="status-dot"></span> A FICTIONAL TEST OF QUESTIONABLE IMPORTANCE</p>
+          <h1 id="hero-title">THE CAPTCHA<br><span>KNOWS YOU'RE HERE.</span></h1>
+          <p class="hero-subtitle">100 levels. Zero mercy. Questionable intelligence required.</p>
+          <p class="intro-copy">A suspicious little puzzle room filled with trick questions, odd instructions, and one very dramatic checkbox. No cameras. No actual security checks. Just you and the CAPTCHA.</p>
+          <div class="hero-actions">
+            <button class="button button-primary" type="button" data-action="start">Start game <span aria-hidden="true">↗</span></button>
+            <button class="button button-secondary" id="continue-button" type="button" data-action="continue">Continue game</button>
+            <button class="button button-quiet" type="button" data-action="map">Level map</button>
+            <button class="button button-quiet" type="button" data-action="info">How to play</button>
+            <button class="button button-quiet" type="button" data-action="settings">Settings</button>
+          </div>
+          <div class="hero-meta">
+            <span><strong id="landing-completed">0</strong><span id="landing-count-label"> / 100 levels solved</span></span>
+            <span>Best score <strong id="landing-best">0</strong></span>
+          </div>
+          <p class="difficulty-overview">A long descent through <span class="overview-easy">easy</span>, <span class="overview-medium">medium</span>, and <span class="overview-hard">hard</span> puzzles.</p>
+          <p class="disclaimer">Fictional entertainment only — this game does not verify your identity or inspect your device.</p>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+          <div class="eye-symbol"><span></span></div>
+          <div class="floating-mark mark-one">?</div>
+          <div class="floating-mark mark-two">✓</div>
+          <div class="art-caption">IT'S PROBABLY FINE.</div>
+        </div>
+      </section>
+
+      <section class="screen secondary-screen hidden" id="map-screen" aria-labelledby="map-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">THE CORRIDOR</p>
+            <h1 id="map-title">Choose your <span>questionable fate.</span></h1>
+            <p class="muted">Unlocked levels are replayable. Skipping moves the corridor forward, but does not count as solving.</p>
+          </div>
+          <div class="map-score"><span>YOUR SCORE</span><strong id="map-score">0</strong></div>
+        </div>
+        <div class="map-legend" aria-label="Level status key">
+          <span><i class="legend-dot completed-dot"></i> Solved</span>
+          <span><i class="legend-dot active-dot"></i> Available</span>
+          <span><i class="legend-dot current-dot"></i> Current</span>
+          <span><i class="legend-dot skipped-dot"></i> Skipped</span>
+          <span><i class="legend-dot locked-dot"></i> Locked</span>
+        </div>
+        <div class="level-map" id="level-map" aria-label="100 level selection grid"></div>
+        <div class="screen-actions">
+          <button class="button button-secondary" type="button" data-action="home">Back home</button>
+          <button class="button button-quiet" type="button" data-action="restart">Restart all progress</button>
+        </div>
+      </section>
+
+      <section class="screen secondary-screen hidden" id="game-screen" aria-labelledby="level-title">
+        <div class="game-toolbar">
+          <button class="button button-quiet back-button" type="button" data-action="map">← Level map</button>
+          <div class="score-readout"><span>YOUR SCORE</span><strong id="game-score">0</strong></div>
+        </div>
+        <div class="progress-track" role="progressbar" id="progress-track" aria-label="Game progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <span id="progress-fill"></span>
+        </div>
+        <article class="challenge-card" id="challenge-card">
+          <div class="challenge-heading">
+            <div>
+              <p class="eyebrow" id="level-kicker">LEVEL 01 / 100</p>
+              <h1 id="level-title"></h1>
+            </div>
+            <span class="difficulty-badge" id="difficulty-badge"></span>
+          </div>
+          <p class="challenge-question" id="challenge-question"></p>
+          <p class="challenge-instructions" id="challenge-instructions"></p>
+          <div class="puzzle-area" id="puzzle-area"></div>
+          <div class="hint-box hidden" id="hint-box" role="status"></div>
+          <div class="feedback hidden" id="feedback" role="status" aria-live="polite"></div>
+          <div class="challenge-controls" id="challenge-controls">
+            <button class="button button-primary" id="submit-answer" type="button">Submit answer</button>
+            <button class="button button-secondary" type="button" data-action="hint">Use a hint <span class="control-cost">−25</span></button>
+            <button class="button button-quiet" type="button" data-action="skip">Skip level <span class="control-cost">−50</span></button>
+            <button class="button button-quiet" type="button" data-action="reset-level">Reset level</button>
+          </div>
+          <div class="after-answer hidden" id="after-answer">
+            <button class="button button-secondary hidden" id="retry-button" type="button" data-action="retry">Try again</button>
+            <button class="button button-primary hidden" id="next-button" type="button" data-action="next">Continue</button>
+            <button class="button button-secondary hidden" id="return-map-button" type="button" data-action="map">Back to map</button>
+          </div>
+          <div class="challenge-footer">
+            <span id="attempt-count">Attempts this level: 0</span>
+            <span id="earned-points"></span>
+          </div>
+        </article>
+      </section>
+
+      <section class="screen secondary-screen hidden" id="info-screen" aria-labelledby="info-title">
+        <p class="eyebrow">A NOTE FROM THE QUESTIONABLE DEPARTMENT</p>
+        <h1 id="info-title">How to <span>survive.</span></h1>
+        <div class="info-card">
+          <p>Read each challenge carefully; some instructions are suspiciously literal. Choose, type, remember, or click as the level asks.</p>
+          <ul>
+            <li>Correct answers earn points once per level. Replays are free, but do not farm points.</li>
+            <li>A hint costs 25 points once per level. Skipping costs 50 points once per level and unlocks the next room.</li>
+            <li>Wrong answers do not reduce your score. Retries are unlimited.</li>
+            <li>Your progress and sound preference stay in this browser using local storage.</li>
+          </ul>
+          <p>This is fictional entertainment, not a real CAPTCHA or security product. It never uses your camera, microphone, location, or network to inspect you.</p>
+        </div>
+        <div class="screen-actions">
+          <button class="button button-secondary" type="button" data-action="home">Back home</button>
+          <button class="button button-quiet" type="button" data-action="restart">Restart all progress</button>
+        </div>
+      </section>
+
+      <section class="screen secondary-screen hidden" id="settings-screen" aria-labelledby="settings-title">
+        <p class="eyebrow">PERSONALIZE THE SUSPENSE</p>
+        <h1 id="settings-title">Settings, <span>allegedly.</span></h1>
+        <div class="info-card settings-card">
+          <p>Sound effects are generated locally after interaction. No audio file or external service is required.</p>
+          <button class="button button-secondary" type="button" data-action="sound">Turn sound on</button>
+          <p class="muted">Saved progress is stored only in this browser. Clearing browser storage will erase it.</p>
+        </div>
+        <div class="screen-actions"><button class="button button-secondary" type="button" data-action="home">Back home</button></div>
+      </section>
+
+      <section class="screen secondary-screen hidden victory-screen" id="victory-screen" aria-labelledby="victory-title">
+        <div class="victory-mark" aria-hidden="true">✓</div>
+        <p class="eyebrow">CASE CLOSED (MORE OR LESS)</p>
+        <h1 id="victory-title">YOU SURVIVED<br><span>ALL 100 LEVELS!</span></h1>
+        <p class="victory-reveal">Congratulations! Your brain survived the impossible. Your reward? Absolutely nothing. 😂</p>
+        <p class="muted">This was a fictional prank game, not real security verification.</p>
+        <div class="victory-stats">
+          <div><span>FINAL SCORE</span><strong id="victory-score">0</strong></div>
+          <div><span>LEVELS SOLVED</span><strong id="victory-completed">0 / 100</strong></div>
+          <div><span>ATTEMPTS</span><strong id="victory-attempts">0</strong></div>
+          <div><span>HINTS / SKIPS</span><strong id="victory-hints-skips">0 / 0</strong></div>
+          <div><span>COMPLETION TIME</span><strong id="victory-time">Not tracked</strong></div>
+        </div>
+        <div class="screen-actions centered-actions">
+          <button class="button button-primary" type="button" data-action="replay">Replay the game</button>
+          <button class="button button-secondary" type="button" data-action="share">Share</button>
+          <button class="button button-quiet" type="button" data-action="map">Level map</button>
+        </div>
+        <p class="share-feedback" id="share-feedback" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <span>IMPOSSIBLE CAPTCHA <span class="footer-divider">/</span> COMPLETELY UNOFFICIAL</span>
+      <span>100% pretend. 0% device inspection.</span>
+    </footer>
+    <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
