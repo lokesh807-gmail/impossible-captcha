@@ -2,6 +2,8 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const core = require("../game-core.js");
 
 const REQUIRED_SEQUENCE = [
@@ -17,28 +19,34 @@ const REQUIRED_SEQUENCE = [
   "medium", "easy", "hard", "medium", "easy", "hard", "medium", "easy", "hard", "hard"
 ];
 
-test("catalog contains exactly 100 unique consecutive levels in both required difficulty ranges", () => {
+test("campaign contains exactly 1000 consecutive levels and preserves the original first-100 difficulty sequence", () => {
   const report = core.validateCatalog(core.LEVELS);
   assert.deepEqual(report, { valid: true, problems: [] });
-  assert.equal(core.TOTAL_LEVELS, 100);
-  assert.equal(core.LEVELS.length, 100);
-  assert.deepEqual(core.LEVELS.map(level => level.id), Array.from({ length: 100 }, (_, index) => index + 1));
-  assert.deepEqual(core.DIFFICULTIES, REQUIRED_SEQUENCE);
-  assert.deepEqual(core.LEVELS.map(level => level.difficulty), REQUIRED_SEQUENCE);
-  assert.equal(new Set(core.LEVELS.map(level => level.title)).size, 100);
-  assert.equal(new Set(core.LEVELS.map(level => level.question)).size, 100);
-  assert.equal(core.LEVELS[99].finalBoss, true);
+  assert.equal(core.TOTAL_LEVELS, 1000);
+  assert.equal(core.LEVELS.length, 1000);
+  assert.deepEqual(core.LEVELS.map(level => level.id), Array.from({ length: 1000 }, (_, index) => index + 1));
+  assert.deepEqual(core.DIFFICULTIES.slice(0, 100), REQUIRED_SEQUENCE);
+  assert.deepEqual(core.LEVELS.slice(0, 100).map(level => level.difficulty), REQUIRED_SEQUENCE);
+  assert.equal(new Set(core.LEVELS.map(level => level.title)).size, 1000);
+  assert.equal(core.QUESTION_BANK.length, 160);
+  assert.equal(new Set(core.QUESTION_BANK.map(question => question.id)).size, 160);
+  assert.equal(new Set(core.QUESTION_BANK.map(question => question.question)).size, 160);
+  assert.equal(core.LEVELS[999].finalBoss, true);
+  assert.equal(core.LEVELS[999].id, 1000);
+  assert.equal(core.LEVELS.some(level => level.id === 1001), false);
 });
 
-test("question categories cover all requested puzzle styles", () => {
-  const requiredCategories = [
-    "brainless", "common-sense", "riddle", "tricky-multiple-choice", "misleading-instruction",
-    "reverse-psychology", "funny-math", "odd-one-out", "visual-observation", "pattern-recognition",
-    "unexpected-answer", "wordplay", "silly-situation", "button-challenge", "emoji-puzzle",
-    "memory", "follow-instructions", "impossible-sounding", "obvious-hidden", "harmless-prank",
-    "sequence", "multi-step", "find-difference", "funny-logic", "mini-game"
-  ];
-  assert.deepEqual([...new Set(core.LEVELS.map(level => level.category))].sort(), requiredCategories.sort());
+test("question bank has unique validated questions in all four categories", () => {
+  assert.deepEqual(core.validateQuestionBank(core.QUESTION_BANK), { valid: true, problems: [] });
+  assert.deepEqual(Object.fromEntries(core.CATEGORIES.map(category => [
+    category,
+    core.QUESTION_BANK.filter(question => question.categoryId === category).length
+  ])), {
+    aptitude: 20,
+    reasoning: 20,
+    "general-knowledge": 20,
+    tricky: 100
+  });
 });
 
 test("all supported puzzle types appear and every level accepts its solution but rejects a wrong one", () => {
@@ -167,24 +175,114 @@ test("version 1 saves migrate all valid 50-level progress without completing new
   assert.equal(migration.state.completedLevels.some(id => id > 50), false);
 });
 
-test("malformed and unsupported saves return a safe fresh state without claiming migration", () => {
+test("version 2 campaign saves upgrade without discarding existing progress", () => {
+  const migration = core.migrateSave({
+    version: 2,
+    data: { highestUnlocked: 100, currentLevelId: 100, completedLevels: [1, 99], score: 500, bestScore: 700 }
+  });
+  assert.equal(migration.valid, true);
+  assert.equal(migration.migrated, true);
+  assert.equal(migration.state.highestUnlocked, 100);
+  assert.deepEqual(migration.state.completedLevels, [1, 99]);
+  assert.equal(migration.state.score, 500);
+});
+
+function seededCrypto(seed) {
+  let value = seed >>> 0;
+  return {
+    getRandomValues(values) {
+      for (let index = 0; index < values.length; index += 1) {
+        value = (Math.imul(value, 1664525) + 1013904223) >>> 0;
+        values[index] = value;
+      }
+      return values;
+    }
+  };
+}
+
+test("randomized sessions use unique IDs, avoid recent questions, and vary between seeds", () => {
+  const first = core.createQuestionSession(core.QUESTION_BANK, {
+    mode: "quick", category: "aptitude", count: 10, crypto: seededCrypto(31)
+  });
+  const second = core.createQuestionSession(core.QUESTION_BANK, {
+    mode: "quick", category: "aptitude", count: 10, crypto: seededCrypto(99)
+  });
+  assert.equal(first.questions.length, 10);
+  assert.equal(new Set(first.questionIds).size, first.questionIds.length);
+  assert.notDeepEqual(first.questionIds, second.questionIds);
+  assert.ok(first.questions.every(question => question.categoryId === "aptitude"));
+  assert.ok(first.questions.every(question => question.options.some(option => core.validateAnswer(question, option))));
+
+  const allAptitudeIds = core.QUESTION_BANK.filter(question => question.categoryId === "aptitude").map(question => question.id);
+  const recentlySeen = allAptitudeIds.slice(0, -3);
+  const unseen = core.createQuestionSession(core.QUESTION_BANK, {
+    mode: "quick",
+    category: "aptitude",
+    count: 10,
+    recentQuestionIds: recentlySeen,
+    crypto: seededCrypto(5)
+  });
+  assert.equal(unseen.questions.length, 10);
+  assert.ok(allAptitudeIds.slice(-3).every(id => unseen.questionIds.includes(id)));
+  assert.equal(new Set(unseen.questionIds).size, 10);
+});
+
+test("daily sessions are stable for the same date and mixed challenge draws from every category", () => {
+  const dailyOptions = { mode: "daily", category: "mixed", count: 10, date: "2026-10-26" };
+  const firstDaily = core.createQuestionSession(core.QUESTION_BANK, dailyOptions);
+  const secondDaily = core.createQuestionSession(core.QUESTION_BANK, dailyOptions);
+  assert.deepEqual(firstDaily.questionIds, secondDaily.questionIds);
+
+  const mixed = core.createQuestionSession(core.QUESTION_BANK, {
+    mode: "mixed", category: "mixed", count: 25, crypto: seededCrypto(123)
+  });
+  assert.deepEqual(new Set(mixed.questions.map(question => question.categoryId)), new Set(core.CATEGORIES));
+  assert.equal(mixed.questionIds.length, 25);
+  const categoryCounts = core.CATEGORIES.map(category => mixed.questions.filter(question => question.categoryId === category).length);
+  assert.ok(Math.max(...categoryCounts) - Math.min(...categoryCounts) <= 1);
+});
+
+test("endless practice includes the complete category pool, unseen first, without duplicates", () => {
+  const aptitude = core.QUESTION_BANK.filter(question => question.categoryId === "aptitude");
+  const session = core.createQuestionSession(core.QUESTION_BANK, {
+    mode: "endless",
+    category: "aptitude",
+    recentQuestionIds: aptitude.slice(0, 8).map(question => question.id),
+    crypto: seededCrypto(73)
+  });
+  assert.equal(session.questions.length, aptitude.length);
+  assert.equal(new Set(session.questionIds).size, aptitude.length);
+  assert.ok(aptitude.slice(8).every(question => session.questionIds.includes(question.id)));
+});
+
+test("static GitHub Pages asset references resolve from the repository root", () => {
+  const root = path.join(__dirname, "..");
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  for (const asset of ["style.css", "level-data.js", "question-bank.js", "game-core.js", "script.js"]) {
+    assert.ok(html.includes(`./${asset}`), `${asset} should be referenced relatively`);
+    assert.ok(fs.existsSync(path.join(root, asset)), `${asset} should exist at the site root`);
+  }
+  assert.equal(fs.existsSync(path.join(root, ".env")), false);
+});
+
+test("malformed and unsupported saves return a safe fresh state", () => {
   assert.equal(core.migrateSave(null).valid, false);
   assert.equal(core.migrateSave({ version: 999, data: {} }).valid, false);
   assert.deepEqual(core.sanitizeState(null), core.createInitialState());
   const sanitized = core.sanitizeState({
     highestUnlocked: 1000,
     currentLevelId: 1000,
-    completedLevels: [1, 1, 101, "2"],
+    completedLevels: [1, 1, 1001, "2"],
     skippedLevels: [4],
     hintedLevels: ["4", 4],
     score: 1e12,
     bestScore: 1e12,
-    attemptsByLevel: { 1: -2, 2: 3, 101: 50 },
+    attemptsByLevel: { 1: -2, 2: 3, 1001: 50 },
     attemptsTotal: -1,
     soundEnabled: "true"
   });
-  assert.equal(sanitized.highestUnlocked, 5);
-  assert.equal(sanitized.currentLevelId, 5);
+  assert.equal(sanitized.highestUnlocked, 1000);
+  assert.equal(sanitized.currentLevelId, 1000);
   assert.deepEqual(sanitized.completedLevels, [1]);
   assert.deepEqual(sanitized.skippedLevels, [4]);
   assert.deepEqual(sanitized.hintedLevels, [4]);
@@ -195,17 +293,17 @@ test("malformed and unsupported saves return a safe fresh state without claiming
   assert.equal(sanitized.soundEnabled, false);
 });
 
-test("level 100 records completion time only after all 100 levels are solved", () => {
+test("level 1000 records completion time only after every campaign level is solved", () => {
   let state = core.sanitizeState({
-    highestUnlocked: 100,
-    completedLevels: Array.from({ length: 99 }, (_, index) => index + 1),
+    highestUnlocked: 1000,
+    completedLevels: Array.from({ length: 999 }, (_, index) => index + 1),
     startedAt: Date.now() - 1000
   });
-  const result = core.completeLevel(state, core.LEVELS[99]);
-  assert.equal(result.state.completedLevels.length, 100);
-  assert.equal(result.state.highestUnlocked, 100);
-  assert.equal(result.state.completedLevels.includes(100), true);
+  const result = core.completeLevel(state, core.LEVELS[999]);
+  assert.equal(result.state.completedLevels.length, 1000);
+  assert.equal(result.state.highestUnlocked, 1000);
+  assert.equal(result.state.completedLevels.includes(1000), true);
   assert.ok(result.state.finishedAt >= result.state.startedAt);
-  state = core.sanitizeState({ highestUnlocked: 100, skippedLevels: Array.from({ length: 99 }, (_, index) => index + 1) });
-  assert.equal(core.completeLevel(state, core.LEVELS[99]).state.finishedAt, null);
+  state = core.sanitizeState({ highestUnlocked: 1000, skippedLevels: Array.from({ length: 999 }, (_, index) => index + 1) });
+  assert.equal(core.completeLevel(state, core.LEVELS[999]).state.finishedAt, null);
 });

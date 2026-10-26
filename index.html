@@ -4,10 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#08090d">
-    <meta name="description" content="A fictional, harmless 100-level CAPTCHA puzzle game.">
-    <title>Impossible CAPTCHA — 100 Levels of Brain Confusion</title>
+    <meta name="description" content="A fictional, harmless 1,000-level puzzle game with randomized question practice.">
+    <title>Impossible CAPTCHA — 1,000 Levels of Brain Confusion</title>
     <link rel="stylesheet" href="./style.css">
     <script src="./level-data.js" defer></script>
+    <script src="./question-bank.js" defer></script>
     <script src="./game-core.js" defer></script>
     <script src="./script.js" defer></script>
   </head>
@@ -30,17 +31,18 @@
         <div class="hero-copy">
           <p class="eyebrow"><span class="status-dot"></span> A FICTIONAL TEST OF QUESTIONABLE IMPORTANCE</p>
           <h1 id="hero-title">THE CAPTCHA<br><span>KNOWS YOU'RE HERE.</span></h1>
-          <p class="hero-subtitle">100 levels. Zero mercy. Questionable intelligence required.</p>
+          <p class="hero-subtitle">1,000 levels. Zero mercy. Questionable intelligence required.</p>
           <p class="intro-copy">A suspicious little puzzle room filled with trick questions, odd instructions, and one very dramatic checkbox. No cameras. No actual security checks. Just you and the CAPTCHA.</p>
           <div class="hero-actions">
             <button class="button button-primary" type="button" data-action="start">Start game <span aria-hidden="true">↗</span></button>
             <button class="button button-secondary" id="continue-button" type="button" data-action="continue">Continue game</button>
+            <button class="button button-secondary" type="button" data-action="modes">Question modes</button>
             <button class="button button-quiet" type="button" data-action="map">Level map</button>
             <button class="button button-quiet" type="button" data-action="info">How to play</button>
             <button class="button button-quiet" type="button" data-action="settings">Settings</button>
           </div>
           <div class="hero-meta">
-            <span><strong id="landing-completed">0</strong><span id="landing-count-label"> / 100 levels solved</span></span>
+            <span><strong id="landing-completed">0</strong><span id="landing-count-label"> / 1000 levels solved</span></span>
             <span>Best score <strong id="landing-best">0</strong></span>
           </div>
           <p class="difficulty-overview">A long descent through <span class="overview-easy">easy</span>, <span class="overview-medium">medium</span>, and <span class="overview-hard">hard</span> puzzles.</p>
@@ -71,7 +73,12 @@
           <span><i class="legend-dot skipped-dot"></i> Skipped</span>
           <span><i class="legend-dot locked-dot"></i> Locked</span>
         </div>
-        <div class="level-map" id="level-map" aria-label="100 level selection grid"></div>
+        <div class="map-pagination" aria-label="Level map pages">
+          <button class="button button-quiet" type="button" data-action="map-previous" id="map-previous">← Previous</button>
+          <span id="map-page-label" aria-live="polite">Levels 1–40 / 1000</span>
+          <button class="button button-quiet" type="button" data-action="map-next" id="map-next">Next →</button>
+        </div>
+        <div class="level-map" id="level-map" aria-label="Paginated 1000 level selection grid"></div>
         <div class="screen-actions">
           <button class="button button-secondary" type="button" data-action="home">Back home</button>
           <button class="button button-quiet" type="button" data-action="restart">Restart all progress</button>
@@ -80,8 +87,9 @@
 
       <section class="screen secondary-screen hidden" id="game-screen" aria-labelledby="level-title">
         <div class="game-toolbar">
-          <button class="button button-quiet back-button" type="button" data-action="map">← Level map</button>
+          <button class="button button-quiet back-button" type="button" data-action="home">← Home</button>
           <div class="score-readout"><span>YOUR SCORE</span><strong id="game-score">0</strong></div>
+          <button class="button button-quiet" type="button" data-action="modes">New game</button>
         </div>
         <div class="progress-track" role="progressbar" id="progress-track" aria-label="Game progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
           <span id="progress-fill"></span>
@@ -89,7 +97,7 @@
         <article class="challenge-card" id="challenge-card">
           <div class="challenge-heading">
             <div>
-              <p class="eyebrow" id="level-kicker">LEVEL 01 / 100</p>
+              <p class="eyebrow" id="level-kicker">LEVEL 001 / 1000</p>
               <h1 id="level-title"></h1>
             </div>
             <span class="difficulty-badge" id="difficulty-badge"></span>
@@ -117,17 +125,83 @@
         </article>
       </section>
 
+      <section class="screen secondary-screen hidden" id="mode-screen" aria-labelledby="mode-title">
+        <p class="eyebrow">CHOOSE YOUR OWN QUESTIONABLE FATE</p>
+        <h1 id="mode-title">Choose a <span>question mode.</span></h1>
+        <p class="muted mode-intro">A new session gets a shuffled question set. Your browser avoids recently seen questions when it can.</p>
+        <form id="practice-setup-form" class="mode-card">
+          <fieldset class="category-picker">
+            <legend>Choose a category</legend>
+            <div class="category-grid">
+              <label class="category-card"><input type="radio" name="category" value="aptitude"><span class="category-icon" aria-hidden="true">∑</span><strong>Aptitude</strong><span>Numbers, percentages, work, and probability</span></label>
+              <label class="category-card"><input type="radio" name="category" value="reasoning"><span class="category-icon" aria-hidden="true">⌘</span><strong>Reasoning</strong><span>Patterns, logic, codes, and deductions</span></label>
+              <label class="category-card"><input type="radio" name="category" value="general-knowledge"><span class="category-icon" aria-hidden="true">◉</span><strong>General Knowledge</strong><span>Stable facts about science, history, and the world</span></label>
+              <label class="category-card"><input type="radio" name="category" value="tricky"><span class="category-icon" aria-hidden="true">?</span><strong>Tricky Questions</strong><span>Riddles, attention tests, and harmless brain teasers</span></label>
+              <label class="category-card category-card-mixed"><input type="radio" name="category" value="mixed" checked><span class="category-icon" aria-hidden="true">✳</span><strong>Mixed Challenge</strong><span>Questions from all four categories</span></label>
+            </div>
+          </fieldset>
+          <label for="practice-mode">Game mode</label>
+          <select id="practice-mode" name="mode">
+            <option value="quick">Quick Play — 10 questions</option>
+            <option value="challenge">Challenge Mode — 25 questions</option>
+            <option value="endless">Endless Practice — all unseen questions</option>
+            <option value="daily">Daily Challenge — stable for your local date</option>
+            <option value="mixed">Mixed Challenge — 25 questions from all categories</option>
+            <option value="custom">Custom Practice</option>
+          </select>
+          <div id="custom-options" class="custom-options hidden">
+            <label for="practice-difficulty">Difficulty</label>
+            <select id="practice-difficulty" name="difficulty">
+              <option value="all">All difficulties</option>
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+            <label for="practice-count">Question count (1–50)</label>
+            <input id="practice-count" name="count" type="number" min="1" max="50" value="10">
+          </div>
+          <p id="daily-note" class="muted">Daily Challenge uses today's date on this device. Without a server, users in different time zones may get a different daily set.</p>
+          <div class="screen-actions">
+            <button class="button button-primary" type="submit">Start new session</button>
+            <button class="button button-secondary hidden" id="resume-practice" type="button" data-action="resume-practice">Resume saved practice</button>
+            <button class="button button-secondary" type="button" data-action="start">1000-Level Campaign</button>
+            <button class="button button-quiet" type="button" data-action="home">Back home</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="screen secondary-screen hidden" id="practice-results-screen" aria-labelledby="practice-results-title">
+        <p class="eyebrow">SESSION COMPLETE</p>
+        <h1 id="practice-results-title">The questions <span>are done.</span></h1>
+        <div class="results-grid">
+          <div><span>FINAL SCORE</span><strong id="results-score">0</strong></div>
+          <div><span>ACCURACY</span><strong id="results-accuracy">0%</strong></div>
+          <div><span>CORRECT</span><strong id="results-correct">0</strong></div>
+          <div><span>INCORRECT / SKIPPED</span><strong id="results-incorrect">0</strong></div>
+          <div><span>BEST STREAK</span><strong id="results-streak">0</strong></div>
+          <div><span>TIME</span><strong id="results-time">Not tracked</strong></div>
+        </div>
+        <p id="results-category" class="muted"></p>
+        <p id="results-breakdown" class="muted"></p>
+        <div class="screen-actions">
+          <button class="button button-primary" type="button" data-action="modes">New Game</button>
+          <button class="button button-secondary" type="button" data-action="home">Back home</button>
+        </div>
+      </section>
+
       <section class="screen secondary-screen hidden" id="info-screen" aria-labelledby="info-title">
         <p class="eyebrow">A NOTE FROM THE QUESTIONABLE DEPARTMENT</p>
         <h1 id="info-title">How to <span>survive.</span></h1>
         <div class="info-card">
-          <p>Read each challenge carefully; some instructions are suspiciously literal. Choose, type, remember, or click as the level asks.</p>
+          <p>Choose the 1,000-Level Campaign to follow the original corridor, or open Question Modes for randomized aptitude, reasoning, general knowledge, and tricky-question sessions.</p>
           <ul>
             <li>Correct answers earn points once per level. Replays are free, but do not farm points.</li>
             <li>A hint costs 25 points once per level. Skipping costs 50 points once per level and unlocks the next room.</li>
             <li>Wrong answers do not reduce your score. Retries are unlimited.</li>
-            <li>Your progress and sound preference stay in this browser using local storage.</li>
+            <li>Practice mode supports Quick Play, Challenge, Endless, Daily, Mixed, and Custom sessions.</li>
+            <li>Your progress and sound preference stay in this browser using local storage; clearing it erases local saves.</li>
           </ul>
+          <p>Random sessions use browser randomness and avoid recently seen questions where possible. Different browsers often get different sequences, but a static site cannot coordinate globally unique questions. Daily sets use your device's local date, so time zones can differ.</p>
           <p>This is fictional entertainment, not a real CAPTCHA or security product. It never uses your camera, microphone, location, or network to inspect you.</p>
         </div>
         <div class="screen-actions">
@@ -150,12 +224,12 @@
       <section class="screen secondary-screen hidden victory-screen" id="victory-screen" aria-labelledby="victory-title">
         <div class="victory-mark" aria-hidden="true">✓</div>
         <p class="eyebrow">CASE CLOSED (MORE OR LESS)</p>
-        <h1 id="victory-title">YOU SURVIVED<br><span>ALL 100 LEVELS!</span></h1>
+        <h1 id="victory-title">YOU SURVIVED<br><span>ALL 1,000 LEVELS!</span></h1>
         <p class="victory-reveal">Congratulations! Your brain survived the impossible. Your reward? Absolutely nothing. 😂</p>
         <p class="muted">This was a fictional prank game, not real security verification.</p>
         <div class="victory-stats">
           <div><span>FINAL SCORE</span><strong id="victory-score">0</strong></div>
-          <div><span>LEVELS SOLVED</span><strong id="victory-completed">0 / 100</strong></div>
+          <div><span>LEVELS SOLVED</span><strong id="victory-completed">0 / 1000</strong></div>
           <div><span>ATTEMPTS</span><strong id="victory-attempts">0</strong></div>
           <div><span>HINTS / SKIPS</span><strong id="victory-hints-skips">0 / 0</strong></div>
           <div><span>COMPLETION TIME</span><strong id="victory-time">Not tracked</strong></div>

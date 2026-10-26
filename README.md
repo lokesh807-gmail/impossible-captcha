@@ -1,129 +1,122 @@
-# Impossible CAPTCHA — 100 Levels of Brain Confusion
+# Impossible CAPTCHA — 1,000 Levels of Brain Confusion
 
-A fictional, harmless 100-level puzzle game built with HTML, CSS, and vanilla JavaScript. It is not a real CAPTCHA or security check. It does not inspect your device, request permissions, collect personal information, or send game data to a server.
+A fictional, harmless puzzle game built with static HTML, CSS, and vanilla JavaScript. It is not a real CAPTCHA or security check and does not inspect your device.
 
-## Features
+## What is included
 
-- Exactly 100 unique playable challenges in the specified difficulty sequence.
-- Multiple-choice, typed-answer, object-selection, ordered-click, memory, and moving-button puzzles.
-- Level map, score, hints, skips, retries, attempts, saved progress, and a final-boss victory screen.
-- Responsive dark thriller styling and optional locally generated sound effects.
-- Automatic migration of saved progress from the previous 50-level release.
-- No build step, framework, backend, API key, or external runtime dependency.
+- A 1,000-level progressive campaign with a paginated level map, difficulty badges, score, hints, skips, retries, saved progress, and a final victory screen.
+- Question modes for Aptitude, Reasoning, General Knowledge, Tricky Questions, and Mixed Challenge.
+- Quick Play (10), Challenge (25), Endless Practice, Daily Challenge, and Custom Practice.
+- Multiple-choice, typed, object-selection, ordered-click, memory, and moving-button puzzles.
+- Local randomized sessions, recent-question avoidance, progress restoration, and a responsive dark thriller theme.
+- No framework, build step, backend, paid service, API key, or external runtime dependency.
+
+## Actual question counts
+
+The validated bank contains **160 unique authored questions**:
+
+| Category | Unique questions |
+| --- | ---: |
+| Aptitude | 20 |
+| Reasoning | 20 |
+| General Knowledge | 20 |
+| Tricky Questions | 100 |
+| **Total** | **160** |
+
+The campaign has exactly 1,000 numbered levels. Its first 100 preserve the original trick-question progression. Levels 101–1,000 cycle through the 160-question bank with distinct level numbers and “Echo” titles. This makes the 1,000-level campaign playable without claiming it contains 1,000 unique questions. Practice sessions select from the unique question bank and do not repeat an ID within a session.
+
+The bank is deliberately smaller than the aspirational target of 250 per category. Add and validate more original questions before describing the bank as larger.
+
+## Categories and modes
+
+- **Aptitude:** percentages, profit and loss, ratios, averages, interest, work, speed, probability, and arithmetic.
+- **Reasoning:** sequences, analogies, codes, directions, syllogisms, ranking, patterns, and deduction.
+- **General Knowledge:** stable facts about Indian history and polity, geography, science, space, the environment, books, organizations, and computing. The bank avoids live/current-affairs claims.
+- **Tricky Questions:** the original 100 harmless brain teasers and attention puzzles.
+
+Select a category and mode on the **Question modes** screen. Mixed Challenge samples all four categories. Custom Practice lets you choose difficulty and a count from 1 to 50.
+
+## Randomization and daily sets
+
+New practice sessions use Fisher–Yates shuffling and `crypto.getRandomValues()` where the browser supports it, with a `Math.random()` fallback. The selection avoids IDs in the current browser's recent-question list when unseen questions are available. A fresh session has a new session ID; question and option order are randomized. Questions do not repeat within one session.
+
+Different browsers generally produce different sequences, but two people can still receive the same questions. GitHub Pages is static hosting: it cannot coordinate visitors or guarantee global uniqueness without a server or shared database. The game does not fingerprint visitors or track them across devices.
+
+Daily Challenge selects deterministically using the device's local calendar date and the current selection algorithm. It is stable for a given date and browser version, but users in different time zones may have different local dates. There is no live news feed.
+
+## Progress and privacy
+
+Campaign progress uses the `impossible-captcha-save` localStorage key. Practice progress and recent question IDs use separate versioned local keys. The active practice session resumes after refresh; a paused practice session can be resumed from the mode screen. The campaign save migrates existing version-1 (50-level) and version-2 (100-level) progress.
+
+Browser storage belongs to that browser and may be cleared by the user. It is not synced to other devices, secure against manual editing, or sent to a server. **Restart all progress** on the level map asks for confirmation and clears campaign and practice history while preserving the sound preference.
 
 ## Project files
 
-- `index.html` — game screens and relative links to local assets.
-- `style.css` — dark thriller theme, responsive layout, and reduced-motion support.
-- `level-data.js` — the 100 question definitions, answers, hints, explanations, categories, and puzzle options.
-- `game-core.js` — difficulty sequence, answer checks, scoring, catalog checks, and save migration.
-- `script.js` — browser UI, game flow, and localStorage integration.
-- `tests/game.test.js` — automated game and save-migration tests using Node's built-in test runner.
-- `.nojekyll` — tells GitHub Pages to publish the files directly without Jekyll processing.
-- `.gitignore` — excludes local editor files, dependencies, and common secret files from Git.
+- `index.html` — screens, category controls, and relative asset references.
+- `style.css` — theme, responsive layout, focus styles, and reduced-motion support.
+- `level-data.js` — the original 100 trick-question definitions.
+- `question-bank.js` — 60 authored Aptitude, Reasoning, and General Knowledge questions.
+- `game-core.js` — 1,000-level campaign, question validation, random sessions, scoring, and save migration.
+- `script.js` — UI, campaign and practice game flow, and localStorage integration.
+- `tests/game.test.js` — Node's built-in automated test suite.
+- `.nojekyll` — root publishing support for GitHub Pages.
 - `netlify.toml` — retained static-hosting configuration; GitHub Pages does not use it.
 
-## GitHub Pages publishing and automatic updates
+## Add questions
 
-The project files, including `index.html`, are at the repository root. The game uses relative paths and needs no build step, backend, API key, or deployment script. The Git remote `origin` points to `https://github.com/lokesh807-gmail/impossible-captcha.git`, and the checked-out branch is `main`.
+Add new records to `question-bank.js` using the existing question fields: unique `id`, `categoryId`, `category`, `difficulty`, `topic`, `title`, `question`, `type`, `options` (for multiple choice), `answer`, `instructions`, `hint`, `explanation`, success/failure text, and difficulty-based `points`.
 
-There is no GitHub Actions deployment workflow in this project. The existing README describes GitHub Pages publishing directly from the `main` branch and the `/ (root)` folder, so this setup does not add a competing workflow. Repository files cannot confirm the live **Settings → Pages** selection; check it once in GitHub:
-
-1. Open the existing `lokesh807-gmail/impossible-captcha` repository. Do not create a duplicate.
-2. Go to **Settings → Pages**.
-3. Under **Build and deployment**, choose **Deploy from a branch**, then select **main** and **/(root)** and save.
-4. GitHub publishes commits pushed to `main`. The published address is shown on the Pages settings screen; for this repository it is normally `https://lokesh807-gmail.github.io/impossible-captcha/`.
-5. Check **Actions** or **Settings → Pages** for the latest Pages build/deployment status. Open the published URL after it finishes and verify the change.
-
-If Pages is already set to **main / (root)**, leave it as-is. No Actions workflow is needed for this static site. Do not switch the source to GitHub Actions unless you deliberately add and configure an Actions deployment later.
-
-### Publish updates from VS Code
-
-1. Edit the game in this repository folder and test it locally with Live Server.
-2. Review the pending changes and make sure no secrets or unrelated files are included:
-
-   ```sh
-   git status
-   git diff
-   ```
-
-3. Stage, commit, and push the verified changes:
-
-   ```sh
-   git add .
-   git commit -m "Update Impossible CAPTCHA questions"
-   git push
-   ```
-
-These commands assume the correct repository and publishing branch are already configured. This checkout currently has `origin` set to the repository above and is on `main`; check `git remote -v` and `git branch --show-current` before pushing if you switch folders or branches. Saving files locally does not publish them. A commit must be pushed to the configured branch before Pages updates.
-
-### Publish an update on GitHub.com
-
-1. Open the existing repository and choose **Add file → Upload files** (or edit an existing file in GitHub).
-2. Upload or edit only the intended files, keeping `index.html` and the other site files at the repository root.
-3. Review the changes, enter a commit message, and commit directly to `main` if that is the configured Pages branch.
-4. Wait for the Pages deployment to finish, then open the URL shown in **Settings → Pages** and check the update.
-
-Never upload `.env` files, passwords, access tokens, private keys, or other secrets. `.gitignore` excludes common secret files from Git, but always review the upload/staging list yourself.
+Use new IDs and original questions. Make sure exactly one multiple-choice option matches the answer (respecting `caseSensitive` where needed). Avoid unsupported current-affairs claims. The runtime and tests validate required fields, category/difficulty values, duplicate IDs/questions, answers, and options.
 
 ## Run locally and test
 
-### Play the game
+1. Open the repository folder in VS Code.
+2. Open `index.html` with the Live Server extension, or use any static HTTP server.
+3. To run the automated tests, install Node.js if needed and run:
 
-1. Open this folder in VS Code.
-2. Install the **Live Server** extension if needed.
-3. Right-click `index.html` and choose **Open with Live Server**.
+   ```sh
+   node --test tests/game.test.js
+   ```
 
-The game is static and needs no backend. Its game files are local, so gameplay works offline after the files are downloaded.
+No `npm install` or build command is needed. The test suite checks all 1,000 campaign IDs, the actual unique bank and category counts, answer validation, progression, scoring, migration, randomized sessions, recent-question filtering, mixed-category balance, daily determinism, and relative GitHub Pages assets.
 
-### Run automated tests
+## GitHub Pages deployment
 
-Install Node.js if needed, open a terminal in the project folder, and run:
+The site files are in the repository root and all CSS/JavaScript references are relative, so the site works under a repository subpath. The repository has a `.nojekyll` file. No GitHub Actions deployment workflow is present, and `netlify.toml` is not a GitHub Pages workflow. Preserve the existing publishing configuration.
 
-```sh
-node --test tests/game.test.js
-```
+In GitHub, open **Settings → Pages** and check the selected source. If the site is branch-published, use **Deploy from a branch**, the intended branch, and `/(root)`. Do not change a working setting. Check the Pages status after pushing; this repository's files alone cannot verify the live setting or claim a deployment has completed.
 
-The test suite checks the exact 100-level sequence, unique questions and titles, answer validation, scoring, unlocking, skips, legacy-save migration, and final-level completion rules.
+### Publish an update from VS Code
 
-## Level data and difficulty
-
-`level-data.js` is the question source. It contains exactly 100 entries in level order. Each entry has a unique title and question, category, challenge type, instructions, hint, explanation, answer, and funny success and failure messages. Add options for multiple-choice puzzles or labeled `objects` for interactive puzzles. Grid and sequence answers use zero-based object indexes. The final entry is the HUMAN word puzzle.
-
-`game-core.js` assigns the difficulty and points from the authoritative sequence. Levels 1–50 retain their original order; Levels 51–100 follow the requested sequence. Each difficulty level awards its existing base points. IDs are assigned consecutively from the entry order, so insert or remove levels only if you also intentionally update the 100-level difficulty list, progression, and tests.
-
-After editing question data, run:
+The current checkout was inspected on branch `main` with an existing `origin` remote. Recheck before publishing:
 
 ```sh
-node --test tests/game.test.js
+git status
+git branch --show-current
+git remote -v
+git diff
 ```
 
-The checks validate the catalog size, IDs, unique questions and titles, every requested category, the difficulty labels, answer options, interactive references, answer acceptance and rejection, and progression/scoring rules.
+- `git status` shows changed, staged, and untracked files.
+- `git branch --show-current` confirms the branch.
+- `git remote -v` shows where push would send commits.
+- `git diff` lets you review the changes before staging.
 
-## Scoring and progression
+After reviewing for unrelated files or secrets, run:
 
-- Easy levels award 100 base points, medium 200, and hard 300.
-- Solving without using a hint earns a one-time 25-point bonus.
-- The first hint on a level costs 25 points; later hints on that level do not charge again.
-- The first skip on a level costs 50 points and unlocks the next level. Skipped levels remain replayable and are not considered solved.
-- Points cannot fall below zero. Correct-completion rewards are awarded once per level, and wrong answers do not reduce score.
-- The victory screen is shown only when all 100 levels have been correctly completed; skips alone do not count.
+```sh
+git add .
+git commit -m "Upgrade Impossible CAPTCHA to 1000 levels"
+git push
+```
 
-## Saved progress and migration
+`git add .` stages non-ignored changes, `git commit` records staged changes, and `git push` sends commits to the configured remote and branch. Never stage `.env` files, passwords, tokens, private keys, or other secrets. Saving locally does not publish the website. After the push, check **Actions** if the repository uses a workflow, or **Settings → Pages** for branch deployment, wait for success, then open the URL GitHub displays and try the new modes.
 
-Progress is stored locally in the current browser under `impossible-captcha-save`. It does not follow you to another browser or device and is not secure or tamper-proof.
+## Troubleshooting
 
-The 100-level release reads the previous version-1 save and carries forward its valid Levels 1–50 completions, skips, score records, hints, attempts, best score, and sound setting. Levels 51–100 start incomplete. Migration writes the version-2 save only after valid data has been recovered. Missing, malformed, or unsupported saves are left untouched; the game shows a warning and pauses further saving until you use **Restart all progress** and confirm.
-
-Use **Restart all progress** on the level map and confirm to clear saved game data. Clearing this site's local storage manually in the browser also resets it.
-
-## Privacy and troubleshooting
-
-- No password, API key, login, camera, microphone, location, or external service is used by the game.
-- If progress does not appear on a different device, remember that saves are browser- and device-specific.
-- If a save is invalid or from an unsupported version, the game preserves that stored value and explains how to restart safely.
-- Sound is optional; puzzles remain playable with sound off or when browser audio is unavailable.
-- If styling is missing, check that `style.css` exists beside `index.html` and that its name and letter case match the `./style.css` link. Apply the same check to `game-core.js` and `script.js`.
-- If the site shows a 404, confirm that Pages is enabled for the correct repository, the source is **Deploy from a branch**, the branch is **main**, the folder is **/(root)**, and `index.html` was uploaded at the repository root. The project URL includes the repository name: `/impossible-captcha/`.
-- Before uploading, review the files for passwords, tokens, `.env` files, and private information. Never put secrets in a public repository.
-- If a GitHub Pages update is not visible, wait a few minutes and hard-refresh the page.
+- **A script or style is missing:** confirm `index.html`, `style.css`, `level-data.js`, `question-bank.js`, `game-core.js`, and `script.js` are in the repository root with exact filename capitalization.
+- **Progress is not on another device:** localStorage is device- and browser-specific.
+- **Saved practice does not load:** malformed or outdated practice data is ignored; start a new session. Campaign saves from prior releases are migrated where supported.
+- **Random questions look familiar:** the unique pool is currently 160 questions; after the unseen pool is exhausted, older questions can be reused. The 1,000-level campaign intentionally cycles the bank.
+- **The deployed page is old or missing:** verify the Pages source and branch, confirm the latest deployment succeeded, and hard-refresh after it finishes.
+- **Push fails:** read the actual Git error and inspect `git status` and the configured remote. Do not use force push as a routine fix.
