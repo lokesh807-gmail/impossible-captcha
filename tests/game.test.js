@@ -28,9 +28,9 @@ test("campaign contains exactly 1000 consecutive levels and preserves the origin
   assert.deepEqual(core.DIFFICULTIES.slice(0, 100), REQUIRED_SEQUENCE);
   assert.deepEqual(core.LEVELS.slice(0, 100).map(level => level.difficulty), REQUIRED_SEQUENCE);
   assert.equal(new Set(core.LEVELS.map(level => level.title)).size, 1000);
-  assert.equal(core.QUESTION_BANK.length, 160);
-  assert.equal(new Set(core.QUESTION_BANK.map(question => question.id)).size, 160);
-  assert.equal(new Set(core.QUESTION_BANK.map(question => question.question)).size, 160);
+  assert.equal(core.QUESTION_BANK.length, 80);
+  assert.equal(new Set(core.QUESTION_BANK.map(question => question.id)).size, 80);
+  assert.equal(new Set(core.QUESTION_BANK.map(question => question.question)).size, 80);
   assert.equal(core.LEVELS[999].finalBoss, true);
   assert.equal(core.LEVELS[999].id, 1000);
   assert.equal(core.LEVELS.some(level => level.id === 1001), false);
@@ -44,9 +44,18 @@ test("question bank has unique validated questions in all four categories", () =
   ])), {
     aptitude: 20,
     reasoning: 20,
-    "general-knowledge": 20,
-    tricky: 100
+    "verbal-ability": 20,
+    "general-knowledge": 20
   });
+  assert.deepEqual(core.CATEGORIES, ["aptitude", "reasoning", "verbal-ability", "general-knowledge"]);
+  assert.ok(core.QUESTION_BANK.every(question => question.sourceType === "newly-authored" && question.sourcePage === null));
+  assert.ok(core.QUESTION_BANK.every(question => question.sourceTopic && question.solution));
+  assert.ok(core.QUESTION_BANK.filter(question => question.categoryId === "aptitude" && question.formula).length >= 10);
+  const verbal = core.QUESTION_BANK.filter(question => question.categoryId === "verbal-ability");
+  assert.equal(verbal.length, 20);
+  assert.ok(verbal.some(question => question.passage && question.topic === "Reading comprehension"));
+  assert.ok(verbal.every(question => question.options.length === 4));
+  assert.ok(core.LEVELS.slice(0, 100).every(level => level.categoryId === "reasoning"));
 });
 
 test("all supported puzzle types appear and every level accepts its solution but rejects a wrong one", () => {
@@ -258,6 +267,10 @@ test("endless practice includes the complete category pool, unseen first, withou
 test("static GitHub Pages asset references resolve from the repository root", () => {
   const root = path.join(__dirname, "..");
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  assert.doesNotMatch(html, /Tricky Questions|value="tricky"/i);
+  const categoryValues = [...html.matchAll(/name="category" value="([^"]+)"/g)].map(match => match[1]);
+  assert.deepEqual(categoryValues, ["aptitude", "reasoning", "verbal-ability", "general-knowledge"]);
+  assert.match(html, /option value="mixed"/);
   for (const asset of ["style.css", "level-data.js", "question-bank.js", "game-core.js", "script.js"]) {
     assert.ok(html.includes(`./${asset}`), `${asset} should be referenced relatively`);
     assert.ok(fs.existsSync(path.join(root, asset)), `${asset} should exist at the site root`);

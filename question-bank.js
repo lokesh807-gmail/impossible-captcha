@@ -70,17 +70,74 @@
     ["gk-20", "hard", "Astronomy", "What is the name of the galaxy that contains our solar system?", "The Milky Way", ["Andromeda", "The Milky Way", "Triangulum", "Whirlpool"], "Its name refers to a pale band of light seen in a dark sky.", "Our solar system is in the Milky Way galaxy."]
   );
 
-  const questions = rows.map(([id, difficulty, topic, question, answer, options, hint, explanation]) => ({
+  const readingPassage = "Mira noticed that the school garden dried quickly on sunny afternoons. She and her classmates spread a layer of fallen leaves over the soil. The leaves reduced direct sunlight on the ground, and the soil stayed damp for longer. The class kept a small uncovered patch nearby so they could compare both areas.";
+  rows.push(
+    ["verb-01", "easy", "Parts of speech", "In “The bright lantern glowed,” which word is an adjective?", "bright", ["lantern", "bright", "glowed", "the"], "An adjective describes a noun.", "“Bright” describes the noun “lantern,” so it is the adjective."],
+    ["verb-02", "easy", "Subject-verb agreement", "Neither the players nor their coach ___ ready to leave.", "is", ["are", "is", "were", "be"], "With “neither…nor,” the verb agrees with the nearer subject.", "The nearer subject is the singular noun “coach,” so the singular verb “is” agrees."],
+    ["verb-03", "easy", "Articles", "We waited for ___ hour before the doors opened.", "an", ["a", "an", "the", "no article"], "The article depends on the opening sound, not the first letter.", "“Hour” begins with a vowel sound because its h is silent, so “an” is correct."],
+    ["verb-04", "easy", "Prepositions", "Ravi is good ___ solving number puzzles.", "at", ["in", "at", "on", "for"], "The usual phrase is “good at” an activity.", "Use “good at” before a skill or activity: “good at solving.”"],
+    ["verb-05", "medium", "Tenses", "By tomorrow evening, the team ___ the report.", "will have completed", ["will complete", "has completed", "will have completed", "completed"], "Use the future perfect for an action finished before a future time.", "“By tomorrow evening” sets a future deadline; “will have completed” is the future perfect."],
+    ["verb-06", "medium", "Sentence correction", "Choose the correct sentence.", "She has lived here since 2020.", ["She lives here since 2020.", "She has lived here since 2020.", "She is living here since 2020.", "She lived here since 2020."], "A situation that began in the past and continues now often uses the present perfect.", "The present perfect “has lived” pairs naturally with “since 2020” for a continuing situation."],
+    ["verb-07", "medium", "Error spotting", "Which sentence is grammatically correct?", "He does not know the answer.", ["He do not know the answer.", "He does not knows the answer.", "He does not know the answer.", "He not knows the answer."], "After “does not,” use the verb's base form.", "“Does” carries the tense and agreement, so the main verb stays in its base form: “know.”"],
+    ["verb-08", "easy", "Synonyms", "Which word is closest in meaning to “concise”?", "Brief", ["Confusing", "Brief", "Careless", "Ordinary"], "A concise message uses few words while keeping its meaning.", "“Brief” means short, which is closest to “concise.”"],
+    ["verb-09", "medium", "Antonyms", "Which word is the opposite of “scarce”?", "Abundant", ["Rare", "Limited", "Abundant", "Small"], "“Scarce” means not available in sufficient quantity.", "“Abundant” means plentiful, the opposite of scarce."],
+    ["verb-10", "medium", "One-word substitutions", "What is the word for a person who compiles or edits dictionaries?", "Lexicographer", ["Biographer", "Lexicographer", "Cartographer", "Choreographer"], "The word begins with “lexicon,” meaning a dictionary or word collection.", "A lexicographer compiles or edits dictionaries."],
+    ["verb-11", "easy", "Idioms and phrases", "If a host tells a nervous guest a joke to “break the ice,” what does the host want to do?", "Make people feel more comfortable", ["End the gathering", "Make people feel more comfortable", "Start an argument", "Explain a rule"], "The idiom describes easing initial awkwardness.", "“Break the ice” means to reduce tension and help people begin talking comfortably."],
+    ["verb-12", "medium", "Sentence completion", "___ it was raining, the match continued.", "Although", ["Because", "Unless", "Although", "Therefore"], "Choose a connector that shows contrast.", "“Although” introduces a contrast: it was raining, but the match continued."],
+    ["verb-13", "medium", "Sentence rearrangement", "Arrange these parts into a clear sentence: (1) before sunrise (2) the hikers (3) began their climb (4) to avoid the heat.", "2, 3, 4, 1", ["2, 3, 4, 1", "1, 2, 3, 4", "3, 2, 1, 4", "2, 4, 1, 3"], "Start with the subject, then the action and its purpose and time.", "“The hikers began their climb to avoid the heat before sunrise” follows subject, action, purpose, and time."],
+    ["verb-14", "medium", "Active and passive voice", "Choose the passive form of “The chef prepared the meal.”", "The meal was prepared by the chef.", ["The chef was prepared by the meal.", "The meal prepared the chef.", "The meal was prepared by the chef.", "The meal is preparing the chef."], "Make the object the subject and use “was” plus the past participle.", "The object “the meal” becomes the subject; past simple passive is “was prepared.”"],
+    ["verb-15", "hard", "Direct and indirect speech", "Choose the correct reported form: Ravi said, “I am tired.”", "Ravi said that he was tired.", ["Ravi said that I am tired.", "Ravi said that he was tired.", "Ravi says that he had tired.", "Ravi said he is tiring."], "In a past reporting clause, pronouns and present tense usually shift back.", "“I” refers to Ravi and changes to “he”; “am” shifts to “was” in reported speech."],
+    ["verb-16", "medium", "Correct word usage", "Choose the sentence that uses “affect” correctly.", "The weather may affect our travel plans.", ["The weather may effect our travel plans.", "The weather may affect our travel plans.", "We discussed the affect of rain.", "Rain had an affect on plans."], "In ordinary usage, “affect” is usually a verb meaning to influence.", "Here the word needs to be a verb meaning “influence,” so “affect” is correct."],
+    ["verb-17", "hard", "Cloze test", "Despite ___ carefully, the team found one small error.", "checking", ["check", "checked", "checking", "to check"], "“Despite” is a preposition; a following action commonly takes the -ing form.", "The gerund “checking” follows “despite”: “Despite checking carefully…”."],
+    ["verb-18", "medium", "Reading comprehension", "Why did the class spread fallen leaves over the garden soil?", "To help the soil stay damp longer", ["To make the soil warmer", "To help the soil stay damp longer", "To cover the comparison patch", "To stop the plants from growing"], "Mira noticed the garden dried quickly; find the action the class took to address that.", "The passage says the leaves reduced direct sunlight and the soil stayed damp longer.", readingPassage],
+    ["verb-19", "hard", "Reading comprehension", "Why did the class leave a small patch uncovered?", "To compare it with the covered soil", ["To give visitors a place to walk", "To compare it with the covered soil", "To collect more fallen leaves", "To keep the garden in direct sunlight"], "Look for the reason the passage gives for keeping two areas different.", "The class kept the uncovered patch so it could compare the covered and uncovered soil.", readingPassage],
+    ["verb-20", "hard", "Subject-verb agreement", "Each of the applicants ___ submitted a completed form.", "has", ["have", "has", "were", "are"], "The subject is “each,” which is singular.", "“Each” takes a singular verb, so “has submitted” is correct."]
+  );
+
+  const formulas = {
+    "apt-01": "Part = percentage ÷ 100 × whole.",
+    "apt-02": "Profit = selling price − cost price.",
+    "apt-03": "Equivalent ratios multiply both terms by the same factor.",
+    "apt-04": "Average = sum of values ÷ number of values.",
+    "apt-05": "Speed = distance ÷ time.",
+    "apt-08": "Simple interest = principal × rate × time ÷ 100.",
+    "apt-09": "Work completed = time worked ÷ total completion time (at a constant rate).",
+    "apt-10": "Sale price = original price × (1 − discount rate).",
+    "apt-11": "Unit price = total price ÷ quantity; new total = unit price × new quantity.",
+    "apt-12": "Total = average × number of values.",
+    "apt-13": "Compound amount = principal × (1 + rate)^years.",
+    "apt-14": "Probability = favorable outcomes ÷ all equally likely outcomes.",
+    "apt-16": "Combined rate = sum of individual rates.",
+    "apt-17": "Part of mixture = total volume × percentage ÷ 100.",
+    "apt-18": "Number of unordered pairs = n(n − 1) ÷ 2."
+  };
+
+  const categoryById = id => id.startsWith("apt-") ? "aptitude"
+    : id.startsWith("rea-") ? "reasoning"
+      : id.startsWith("verb-") ? "verbal-ability" : "general-knowledge";
+  const categoryNameById = id => ({
+    aptitude: "Aptitude",
+    reasoning: "Reasoning",
+    "verbal-ability": "Verbal Ability",
+    "general-knowledge": "General Knowledge"
+  })[categoryById(id)];
+  const questions = rows.map(([id, difficulty, topic, question, answer, options, hint, explanation, passage]) => ({
     id,
-    categoryId: id.startsWith("apt-") ? "aptitude" : id.startsWith("rea-") ? "reasoning" : "general-knowledge",
-    category: id.startsWith("apt-") ? "Aptitude" : id.startsWith("rea-") ? "Reasoning" : "General Knowledge",
+    categoryId: categoryById(id),
+    category: categoryNameById(id),
     difficulty,
     topic,
+    sourceTopic: topic,
+    sourceType: "newly-authored",
+    sourcePage: null,
+    formula: formulas[id] || null,
     title: `${topic}: ${id.toUpperCase()}`,
     question,
     type: "multiple-choice",
     options,
     answer,
+    solution: explanation,
+    passage: passage || null,
     instructions: "Choose the best answer.",
     hint,
     explanation,

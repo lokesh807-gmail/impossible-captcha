@@ -32,7 +32,7 @@
           <p class="eyebrow"><span class="status-dot"></span> A FICTIONAL TEST OF QUESTIONABLE IMPORTANCE</p>
           <h1 id="hero-title">THE CAPTCHA<br><span>KNOWS YOU'RE HERE.</span></h1>
           <p class="hero-subtitle">1,000 levels. Zero mercy. Questionable intelligence required.</p>
-          <p class="intro-copy">A suspicious little puzzle room filled with trick questions, odd instructions, and one very dramatic checkbox. No cameras. No actual security checks. Just you and the CAPTCHA.</p>
+          <p class="intro-copy">A suspicious little puzzle room filled with surprising puzzles, odd instructions, and one very dramatic checkbox. No cameras. No actual security checks. Just you and the CAPTCHA.</p>
           <div class="hero-actions">
             <button class="button button-primary" type="button" data-action="start">Start game <span aria-hidden="true">↗</span></button>
             <button class="button button-secondary" id="continue-button" type="button" data-action="continue">Continue game</button>
@@ -103,6 +103,7 @@
             <span class="difficulty-badge" id="difficulty-badge"></span>
           </div>
           <p class="challenge-question" id="challenge-question"></p>
+          <p class="challenge-passage hidden" id="challenge-passage"></p>
           <p class="challenge-instructions" id="challenge-instructions"></p>
           <div class="puzzle-area" id="puzzle-area"></div>
           <div class="hint-box hidden" id="hint-box" role="status"></div>
@@ -133,11 +134,10 @@
           <fieldset class="category-picker">
             <legend>Choose a category</legend>
             <div class="category-grid">
-              <label class="category-card"><input type="radio" name="category" value="aptitude"><span class="category-icon" aria-hidden="true">∑</span><strong>Aptitude</strong><span>Numbers, percentages, work, and probability</span></label>
+              <label class="category-card"><input type="radio" name="category" value="aptitude" checked><span class="category-icon" aria-hidden="true">∑</span><strong>Aptitude</strong><span>Numbers, percentages, work, and probability</span></label>
               <label class="category-card"><input type="radio" name="category" value="reasoning"><span class="category-icon" aria-hidden="true">⌘</span><strong>Reasoning</strong><span>Patterns, logic, codes, and deductions</span></label>
+              <label class="category-card"><input type="radio" name="category" value="verbal-ability"><span class="category-icon" aria-hidden="true">Aa</span><strong>Verbal Ability</strong><span>Grammar, vocabulary, and reading comprehension</span></label>
               <label class="category-card"><input type="radio" name="category" value="general-knowledge"><span class="category-icon" aria-hidden="true">◉</span><strong>General Knowledge</strong><span>Stable facts about science, history, and the world</span></label>
-              <label class="category-card"><input type="radio" name="category" value="tricky"><span class="category-icon" aria-hidden="true">?</span><strong>Tricky Questions</strong><span>Riddles, attention tests, and harmless brain teasers</span></label>
-              <label class="category-card category-card-mixed"><input type="radio" name="category" value="mixed" checked><span class="category-icon" aria-hidden="true">✳</span><strong>Mixed Challenge</strong><span>Questions from all four categories</span></label>
             </div>
           </fieldset>
           <label for="practice-mode">Game mode</label>
@@ -177,8 +177,9 @@
           <div><span>FINAL SCORE</span><strong id="results-score">0</strong></div>
           <div><span>ACCURACY</span><strong id="results-accuracy">0%</strong></div>
           <div><span>CORRECT</span><strong id="results-correct">0</strong></div>
-          <div><span>INCORRECT / SKIPPED</span><strong id="results-incorrect">0</strong></div>
+          <div><span>INCORRECT / SKIPPED QUESTIONS</span><strong id="results-incorrect">0</strong></div>
           <div><span>BEST STREAK</span><strong id="results-streak">0</strong></div>
+          <div><span>ANSWER ATTEMPTS</span><strong id="results-attempts">0</strong></div>
           <div><span>TIME</span><strong id="results-time">Not tracked</strong></div>
         </div>
         <p id="results-category" class="muted"></p>
@@ -193,7 +194,7 @@
         <p class="eyebrow">A NOTE FROM THE QUESTIONABLE DEPARTMENT</p>
         <h1 id="info-title">How to <span>survive.</span></h1>
         <div class="info-card">
-          <p>Choose the 1,000-Level Campaign to follow the original corridor, or open Question Modes for randomized aptitude, reasoning, general knowledge, and tricky-question sessions.</p>
+          <p>Choose the 1,000-Level Campaign to follow the original corridor, or open Question Modes for randomized aptitude, reasoning, verbal ability, and general knowledge sessions.</p>
           <ul>
             <li>Correct answers earn points once per level. Replays are free, but do not farm points.</li>
             <li>A hint costs 25 points once per level. Skipping costs 50 points once per level and unlocks the next room.</li>

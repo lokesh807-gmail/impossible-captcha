@@ -11,6 +11,11 @@
   const state = loadedSave.state;
   const PRACTICE_KEY = "impossible-captcha-practice-v1";
   const RECENT_KEY = "impossible-captcha-recent-v1";
+  const QUESTION_BY_ID = new Map(QUESTION_BANK.map(question => [question.id, question]));
+  LEVELS.slice(0, 100).forEach((level, index) => {
+    const legacyId = `tricky-${String(index + 1).padStart(3, "0")}`;
+    QUESTION_BY_ID.set(legacyId, Object.assign({}, level, { id: legacyId, categoryId: "reasoning", category: "Reasoning" }));
+  });
   let practiceSession = loadPracticeSession();
   let activePractice = Boolean(practiceSession && practiceSession.active && !practiceSession.completed);
   let saveNotice = loadedSave.notice;
@@ -26,6 +31,17 @@
   const $ = selector => document.querySelector(selector);
   const screens = ["landing-screen", "map-screen", "game-screen", "mode-screen", "practice-results-screen", "info-screen", "settings-screen", "victory-screen"];
   const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[char]);
+  const categoryLabels = {
+    aptitude: "Aptitude",
+    reasoning: "Reasoning",
+    "verbal-ability": "Verbal Ability",
+    "general-knowledge": "General Knowledge",
+    mixed: "Mixed Challenge"
+  };
+  const questionSolution = question => {
+    const solution = question.solution || question.explanation;
+    return question.formula ? `${solution} Formula/shortcut: ${question.formula}` : solution;
+  };
 
   function loadProgress() {
     try {
@@ -66,26 +82,46 @@
         if (!candidate || candidate.version !== 1 || !candidate.session || !Array.isArray(candidate.session.questionIds)) return null;
         const session = candidate.session;
         const questions = session.questionIds.map(id => {
-          const question = QUESTION_BANK.find(item => item.id === id);
+          const question = QUESTION_BY_ID.get(id);
           return question ? Object.assign({}, question, { options: question.options ? question.options.slice() : question.options }) : null;
         });
         if (!questions.length || questions.some(question => !question)
           || new Set(session.questionIds).size !== session.questionIds.length
           || !Number.isInteger(session.index) || session.index < 0 || session.index > questions.length) return null;
         if (Array.isArray(session.optionOrders)) {
+          const questionById = new Map(questions.map(question => [question.id, question]));
           session.optionOrders.forEach(order => {
-            const question = questions.find(item => item.id === order.id);
-            if (question && Array.isArray(order.options) && order.options.length === question.options.length) question.options = order.options;
+            const question = questionById.get(order.id);
+            if (question && Array.isArray(order.options) && question.options && order.options.length === question.options.length) question.options = order.options;
           });
         }
-        const answers = Array.isArray(session.answers) ? session.answers.filter(answer => answer && typeof answer.questionId === "string") : [];
+        const questionIds = new Set(session.questionIds);
+        const answersByQuestion = new Map();
+        if (Array.isArray(session.answers)) {
+          session.answers.forEach(answer => {
+            if (!answer || typeof answer.questionId !== "string" || !questionIds.has(answer.questionId)) return;
+            const prior = answersByQuestion.get(answer.questionId);
+            const attempts = Number.isInteger(answer.attempts) && answer.attempts >= 0 ? answer.attempts : 1;
+            answersByQuestion.set(answer.questionId, Object.assign({}, prior, answer, {
+              correct: Boolean(answer.correct),
+              skipped: Boolean(answer.skipped) && !answer.correct,
+              attempts: (prior ? prior.attempts : 0) + attempts
+            }));
+          });
+        }
+        const answers = [...answersByQuestion.values()].map(answer => Object.assign({}, answer, {
+          categoryId: answer.categoryId === "tricky" ? "reasoning" : answer.categoryId
+        }));
+        const recordedAttempts = answers.reduce((sum, answer) => sum + answer.attempts, 0);
         return Object.assign({}, session, {
+          category: session.category === "tricky" ? "reasoning" : session.category,
           questions,
           answers,
           index: Math.min(session.index, questions.length),
           score: Number.isFinite(session.score) ? Math.max(0, Math.floor(session.score)) : 0,
-          correct: Number.isInteger(session.correct) && session.correct >= 0 ? session.correct : 0,
-          incorrect: Number.isInteger(session.incorrect) && session.incorrect >= 0 ? session.incorrect : 0,
+          correct: answers.filter(answer => answer.correct).length,
+          incorrect: answers.filter(answer => !answer.correct).length,
+          attemptsTotal: Number.isInteger(session.attemptsTotal) && session.attemptsTotal >= recordedAttempts ? session.attemptsTotal : recordedAttempts,
           streak: Number.isInteger(session.streak) && session.streak >= 0 ? session.streak : 0,
           bestStreak: Number.isInteger(session.bestStreak) && session.bestStreak >= 0 ? session.bestStreak : 0,
           hintedQuestionIds: Array.isArray(session.hintedQuestionIds) ? session.hintedQuestionIds : [],
@@ -147,7 +183,7 @@
   function showScreen(screenId) {
     screens.forEach(id => $(`#${id}`).classList.toggle("hidden", id !== screenId));
     $("#app").focus({ preventScroll: true });
-    window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    window.scrollTo({ top: 0, behavior: "auto" });
   }
 
   function updateGlobalDisplays() {
@@ -215,8 +251,12 @@
     const pageCount = Math.ceil(TOTAL_LEVELS / pageSize);
     mapPage = Math.max(0, Math.min(mapPage, pageCount - 1));
     const first = mapPage * pageSize;
+    const completedLevels = new Set(state.completedLevels);
+    const skippedLevels = new Set(state.skippedLevels);
     LEVELS.slice(first, first + pageSize).forEach(level => {
-      const status = getLevelStatus(state, level.id);
+      const status = completedLevels.has(level.id) ? "completed"
+        : skippedLevels.has(level.id) ? "skipped"
+          : level.id <= state.highestUnlocked ? "unlocked" : "locked";
       const isCurrent = currentLevel && currentLevel.id === level.id && status !== "locked";
       const button = document.createElement("button");
       button.type = "button";
@@ -401,7 +441,6 @@
       return;
     }
     activePractice = true;
-    savePracticeSession();
     currentLevel = practiceSession.questions[practiceSession.index];
     submission = null;
     lockedAfterAnswer = false;
@@ -412,6 +451,8 @@
     $("#difficulty-badge").textContent = currentLevel.difficulty;
     $("#difficulty-badge").className = `difficulty-badge difficulty-${currentLevel.difficulty}`;
     $("#challenge-question").textContent = currentLevel.question;
+    $("#challenge-passage").textContent = currentLevel.passage || "";
+    $("#challenge-passage").classList.toggle("hidden", !currentLevel.passage);
     $("#challenge-instructions").textContent = currentLevel.instructions || "Choose or enter your answer.";
     const progress = practiceSession.index / practiceSession.questions.length * 100;
     $("#progress-fill").style.width = `${progress}%`;
@@ -439,7 +480,7 @@
       const feedback = $("#feedback");
       feedback.classList.remove("hidden");
       feedback.classList.add(priorAnswer.correct ? "feedback-success" : "feedback-error");
-      feedback.innerHTML = `<strong>${priorAnswer.correct ? "Answer already recorded for this question." : "This question was skipped."}</strong><span>${escapeHtml(currentLevel.explanation)}</span>`;
+      feedback.innerHTML = `<strong>${priorAnswer.correct ? "Answer already recorded for this question." : "This question was skipped."}</strong><span>${escapeHtml(questionSolution(currentLevel))}</span>`;
       $("#challenge-controls").classList.add("hidden");
       $("#after-answer").classList.remove("hidden");
       $("#retry-button").classList.add("hidden");
@@ -458,18 +499,30 @@
   function submitPracticeAnswer(answer) {
     if (!practiceSession || lockedAfterAnswer) return;
     const correct = validateAnswer(currentLevel, answer);
+    practiceSession.attemptsTotal += 1;
+    const previousAnswer = practiceSession.answers.find(item => item.questionId === currentLevel.id);
     const feedback = $("#feedback");
     feedback.classList.remove("hidden", "feedback-success", "feedback-error");
     if (correct) {
       lockedAfterAnswer = true;
-      practiceSession.correct += 1;
+      if (!previousAnswer) {
+        practiceSession.answers.push({ questionId: currentLevel.id, categoryId: currentLevel.categoryId, difficulty: currentLevel.difficulty, correct: true, attempts: 1 });
+      } else {
+        if (!previousAnswer.correct) {
+          practiceSession.incorrect = Math.max(0, practiceSession.incorrect - 1);
+          practiceSession.correct += 1;
+        }
+        previousAnswer.correct = true;
+        previousAnswer.skipped = false;
+        previousAnswer.attempts = (previousAnswer.attempts || 1) + 1;
+      }
+      if (!previousAnswer) practiceSession.correct += 1;
       practiceSession.streak += 1;
       practiceSession.bestStreak = Math.max(practiceSession.bestStreak, practiceSession.streak);
       const award = practiceSession.hintedQuestionIds.includes(currentLevel.id) ? currentLevel.points : currentLevel.points + 25;
       practiceSession.score += award;
-      practiceSession.answers.push({ questionId: currentLevel.id, categoryId: currentLevel.categoryId, difficulty: currentLevel.difficulty, correct: true });
       feedback.classList.add("feedback-success");
-      feedback.innerHTML = `<strong>${escapeHtml(currentLevel.successMessage || "Correct!")}</strong><span>${escapeHtml(currentLevel.explanation)}</span>`;
+      feedback.innerHTML = `<strong>${escapeHtml(currentLevel.successMessage || "Correct!")}</strong><span>${escapeHtml(questionSolution(currentLevel))}</span>`;
       $("#challenge-controls").classList.add("hidden");
       $("#earned-points").textContent = `+${award} points earned`;
       $("#after-answer").classList.remove("hidden");
@@ -477,11 +530,14 @@
       $("#return-map-button").classList.add("hidden");
       playTone("correct");
     } else {
-      practiceSession.incorrect += 1;
+      if (previousAnswer) previousAnswer.attempts = (previousAnswer.attempts || 1) + 1;
+      else {
+        practiceSession.incorrect += 1;
+        practiceSession.answers.push({ questionId: currentLevel.id, categoryId: currentLevel.categoryId, difficulty: currentLevel.difficulty, correct: false, attempts: 1 });
+      }
       practiceSession.streak = 0;
-      practiceSession.answers.push({ questionId: currentLevel.id, categoryId: currentLevel.categoryId, difficulty: currentLevel.difficulty, correct: false });
       feedback.classList.add("feedback-error");
-      feedback.innerHTML = `<strong>${escapeHtml(currentLevel.failureMessage || "Not quite. Try again.")}</strong><span>Your score is safe. Use the hint or try another answer.</span>`;
+      feedback.innerHTML = `<strong>${escapeHtml(currentLevel.failureMessage || "Not quite. Try again.")}</strong><span>Your score is safe. Attempts on this question: ${previousAnswer ? previousAnswer.attempts : 1}. Use the hint or try another answer.</span>`;
       $("#after-answer").classList.remove("hidden");
       $("#retry-button").classList.remove("hidden");
       playTone("incorrect");
@@ -514,14 +570,15 @@
     $("#results-accuracy").textContent = `${accuracy}%`;
     $("#results-correct").textContent = practiceSession.correct;
     $("#results-incorrect").textContent = practiceSession.incorrect;
+    $("#results-attempts").textContent = practiceSession.attemptsTotal;
     $("#results-streak").textContent = practiceSession.bestStreak;
     $("#results-time").textContent = practiceSession.finishedAt
       ? formatElapsed(practiceSession.finishedAt - practiceSession.startedAt)
       : "In progress";
-    $("#results-category").textContent = `${practiceSession.mode} · ${practiceSession.category} · ${practiceSession.questionIds.length} unique questions. Progress is saved only in this browser.`;
+    $("#results-category").textContent = `${practiceSession.mode} · ${categoryLabels[practiceSession.category] || practiceSession.category} · ${practiceSession.questionIds.length} unique questions. Progress is saved only in this browser.`;
     const categorySummary = CATEGORIES.map(category => {
       const attempts = practiceSession.answers.filter(answer => answer.categoryId === category);
-      return `${category}: ${attempts.filter(answer => answer.correct).length}/${attempts.length}`;
+      return `${categoryLabels[category]}: ${attempts.filter(answer => answer.correct).length}/${attempts.length}`;
     }).join(" · ");
     const difficultySummary = ["easy", "medium", "hard"].map(difficulty => {
       const attempts = practiceSession.answers.filter(answer => answer.difficulty === difficulty);
@@ -559,6 +616,8 @@
     $("#difficulty-badge").textContent = currentLevel.difficulty;
     $("#difficulty-badge").className = `difficulty-badge difficulty-${currentLevel.difficulty}`;
     $("#challenge-question").textContent = currentLevel.question;
+    $("#challenge-passage").textContent = currentLevel.passage || "";
+    $("#challenge-passage").classList.toggle("hidden", !currentLevel.passage);
     $("#challenge-instructions").textContent = currentLevel.instructions;
     $("#progress-fill").style.width = `${((state.completedLevels.length) / TOTAL_LEVELS) * 100}%`;
     $("#progress-track").setAttribute("aria-valuemax", TOTAL_LEVELS);
@@ -646,10 +705,14 @@
     if (activePractice && practiceSession) {
       if (!lockedAfterAnswer) {
         practiceSession.skippedQuestionIds.push(currentLevel.id);
-        practiceSession.incorrect += 1;
+        const previousAnswer = practiceSession.answers.find(answer => answer.questionId === currentLevel.id);
+        if (previousAnswer) previousAnswer.skipped = true;
+        else {
+          practiceSession.incorrect += 1;
+          practiceSession.answers.push({ questionId: currentLevel.id, categoryId: currentLevel.categoryId, difficulty: currentLevel.difficulty, skipped: true, correct: false, attempts: 0 });
+        }
         practiceSession.streak = 0;
         practiceSession.score = Math.max(0, practiceSession.score - 50);
-        practiceSession.answers.push({ questionId: currentLevel.id, categoryId: currentLevel.categoryId, difficulty: currentLevel.difficulty, skipped: true });
         lockedAfterAnswer = true;
         const feedback = $("#feedback");
         feedback.classList.remove("hidden", "feedback-success", "feedback-error");
@@ -659,6 +722,7 @@
         $("#after-answer").classList.remove("hidden");
         $("#next-button").classList.remove("hidden");
         $("#retry-button").classList.add("hidden");
+        $("#attempt-count").textContent = `Question ${practiceSession.index + 1} of ${practiceSession.questions.length} · Attempts: ${previousAnswer ? previousAnswer.attempts : 0}`;
       }
       savePracticeSession();
       updateGlobalDisplays();

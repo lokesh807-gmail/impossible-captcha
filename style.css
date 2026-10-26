@@ -113,7 +113,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 .icon-button:hover { border-color: var(--purple); color: var(--text); }
 
 main { width: min(1180px, calc(100% - 56px)); min-height: calc(100vh - 150px); margin: 0 auto; }
-.screen { animation: screen-enter .38s ease both; }
+.screen { animation: screen-enter .16s ease both; }
 .landing-screen {
   min-height: min(730px, calc(100vh - 150px));
   display: grid;
@@ -313,7 +313,6 @@ h1 span { color: var(--red); }
 .category-card strong { font-size: .95rem; }
 .category-card > span:last-child { color: var(--muted); font-size: .75rem; line-height: 1.5; }
 .category-icon { color: var(--red); font-size: 1.3rem; font-weight: 850; }
-.category-card-mixed { grid-column: 1 / -1; min-height: 115px; }
 .mode-card label { margin-top: 8px; color: #d7d7e0; font-size: .82rem; font-weight: 700; }
 .mode-card select, .mode-card input {
   width: 100%;
@@ -343,7 +342,7 @@ h1 span { color: var(--red); }
 .game-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 21px; }
 .back-button { min-height: 41px; }
 .progress-track { height: 5px; margin-bottom: 23px; overflow: hidden; border-radius: 5px; background: #22242d; }
-.progress-track span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--crimson), var(--purple)); transition: width .35s ease; }
+.progress-track span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--crimson), var(--purple)); transition: width .2s ease; }
 .challenge-card { max-width: 810px; margin: 0 auto; padding: clamp(21px, 5vw, 42px); border: 1px solid #373744; border-radius: var(--radius); background: linear-gradient(145deg, rgba(26, 27, 38, .97), rgba(16, 17, 24, .98)); box-shadow: 0 23px 80px rgba(0, 0, 0, .3), 0 0 40px rgba(111, 49, 101, .06); }
 .challenge-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .challenge-heading .eyebrow { margin-bottom: 9px; }
@@ -353,6 +352,7 @@ h1 span { color: var(--red); }
 .difficulty-medium { border-color: #77612d; background: #2b2416; color: #f4cf78; }
 .difficulty-hard { border-color: #773440; background: #31191f; color: #ff98a1; }
 .challenge-question { margin: 26px 0 7px; color: #f0eff5; font-size: clamp(1.1rem, 2vw, 1.38rem); font-weight: 650; line-height: 1.55; }
+.challenge-passage { margin: 16px 0; padding: 16px 18px; border-left: 2px solid var(--purple); border-radius: 0 12px 12px 0; background: rgba(255, 255, 255, .035); color: var(--muted); line-height: 1.75; white-space: pre-line; }
 .challenge-instructions { margin: 0; color: var(--muted); font-size: .88rem; line-height: 1.65; }
 .puzzle-area { min-height: 100px; margin: 24px 0 17px; }
 .answer-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -453,7 +453,6 @@ h1 span { color: var(--red); }
   .difficulty-badge { flex: 0 0 auto; margin-top: 3px; }
   .answer-options { grid-template-columns: 1fr; }
   .category-grid { grid-template-columns: 1fr; }
-  .category-card-mixed { grid-column: auto; }
   .object-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .object-button { min-height: 87px; }
   .challenge-controls .button { flex: 1 1 calc(50% - 9px); }

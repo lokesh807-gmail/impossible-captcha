@@ -12,7 +12,7 @@
   const SAVE_VERSION = 3;
   const LEGACY_LEVEL_COUNT = 50;
   const TOTAL_LEVELS = 1000;
-  const CATEGORIES = ["aptitude", "reasoning", "general-knowledge", "tricky"];
+  const CATEGORIES = ["aptitude", "reasoning", "verbal-ability", "general-knowledge"];
   const legacyDifficulty = [
     "easy", "hard", "medium", "medium", "easy", "hard", "easy", "medium", "hard", "medium",
     "hard", "easy", "medium", "easy", "hard", "medium", "easy", "hard", "medium", "hard",
@@ -39,13 +39,19 @@
   }
 
   const curatedQuestions = (levelData || []).map((level, index) => Object.assign({}, level, {
-    id: `tricky-${String(index + 1).padStart(3, "0")}`,
-    categoryId: "tricky",
+    id: `legacy-rea-${String(index + 1).padStart(3, "0")}`,
+    categoryId: "reasoning",
+    category: "Reasoning",
     topic: level.category,
+    sourceTopic: level.category,
     difficulty: legacyDifficulty[index],
-    points: BASE_POINTS[legacyDifficulty[index]]
+    points: BASE_POINTS[legacyDifficulty[index]],
+    sourceType: "newly-authored",
+    sourcePage: null,
+    formula: null,
+    solution: level.explanation
   }));
-  const QUESTION_BANK = [...(questionBank || []), ...curatedQuestions];
+  const QUESTION_BANK = [...(questionBank || [])];
   const LEVELS = Array.from({ length: TOTAL_LEVELS }, (_, index) => {
     const levelId = index + 1;
     const question = levelId <= (levelData || []).length
@@ -98,7 +104,7 @@
   }
 
   function createQuestionSession(questions, options = {}) {
-    const categories = options.category === "mixed" ? CATEGORIES : [options.category || "tricky"];
+    const categories = options.category === "mixed" ? CATEGORIES : [options.category || "aptitude"];
     const difficulty = options.difficulty || "all";
     const eligible = questions.filter(question =>
       categories.includes(question.categoryId)
@@ -158,7 +164,7 @@
     return {
       sessionId: createSessionId(daily ? null : options.crypto, seedText),
       mode: options.mode || "quick",
-      category: options.category || "tricky",
+      category: options.category || "aptitude",
       difficulty,
       date: daily ? seedText : null,
       questionIds: selected.map(question => question.id),
@@ -170,6 +176,7 @@
       score: 0,
       correct: 0,
       incorrect: 0,
+      attemptsTotal: 0,
       streak: 0,
       bestStreak: 0,
       hintedQuestionIds: [],
@@ -373,6 +380,11 @@
       if (!CATEGORIES.includes(question.categoryId)) problems.push(`${question.id} has an invalid category.`);
       if (!["easy", "medium", "hard"].includes(question.difficulty)) problems.push(`${question.id} has an invalid difficulty.`);
       if (!question.topic || !question.question || !question.hint || !question.explanation || question.explanation.length < 12) problems.push(`${question.id} is missing required question content.`);
+      if (!question.sourceTopic || !question.solution) problems.push(`${question.id} is missing source topic or solution metadata.`);
+      if (!["newly-authored", "pdf-derived"].includes(question.sourceType)) problems.push(`${question.id} has an invalid source type.`);
+      if (question.sourceType === "pdf-derived" && (!Number.isInteger(question.sourcePage) || question.sourcePage < 1)) problems.push(`${question.id} has no verified PDF page.`);
+      if (question.sourceType === "newly-authored" && question.sourcePage !== null) problems.push(`${question.id} must not claim a PDF page.`);
+      if (question.passage != null && (typeof question.passage !== "string" || !question.passage.trim())) problems.push(`${question.id} has an invalid reading passage.`);
       if (/placeholder|coming soon|todo/i.test(question.question || "")) problems.push(`${question.id} contains placeholder text.`);
       const normalized = normalizeText(question.question || "");
       if (texts.has(normalized)) problems.push(`${question.id} duplicates another bank question.`);
