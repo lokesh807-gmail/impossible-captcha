@@ -15,71 +15,56 @@ A fictional, harmless 100-level puzzle game built with HTML, CSS, and vanilla Ja
 
 - `index.html` — game screens and relative links to local assets.
 - `style.css` — dark thriller theme, responsive layout, and reduced-motion support.
-- `game-core.js` — authoritative 100-level catalog, difficulty sequence, answer checks, scoring, and save migration.
+- `level-data.js` — the 100 question definitions, answers, hints, explanations, categories, and puzzle options.
+- `game-core.js` — difficulty sequence, answer checks, scoring, catalog checks, and save migration.
 - `script.js` — browser UI, game flow, and localStorage integration.
 - `tests/game.test.js` — automated game and save-migration tests using Node's built-in test runner.
 - `.nojekyll` — tells GitHub Pages to publish the files directly without Jekyll processing.
 - `.gitignore` — excludes local editor files, dependencies, and common secret files from Git.
 - `netlify.toml` — retained static-hosting configuration; GitHub Pages does not use it.
 
-## Publish free with GitHub Pages
+## GitHub Pages publishing and automatic updates
 
-The easiest setup uses GitHub's website to upload the files and publish directly from the `main` branch. No Actions workflow or build configuration is required.
+The project files, including `index.html`, are at the repository root. The game uses relative paths and needs no build step, backend, API key, or deployment script. The Git remote `origin` points to `https://github.com/lokesh807-gmail/impossible-captcha.git`, and the checked-out branch is `main`.
 
-### 1. Create a public repository
+There is no GitHub Actions deployment workflow in this project. The existing README describes GitHub Pages publishing directly from the `main` branch and the `/ (root)` folder, so this setup does not add a competing workflow. Repository files cannot confirm the live **Settings → Pages** selection; check it once in GitHub:
 
-1. Sign in to GitHub and open [github.com/new](https://github.com/new).
-2. Enter `impossible-captcha` as the repository name.
-3. Select **Public**.
-4. Click **Create repository**.
+1. Open the existing `lokesh807-gmail/impossible-captcha` repository. Do not create a duplicate.
+2. Go to **Settings → Pages**.
+3. Under **Build and deployment**, choose **Deploy from a branch**, then select **main** and **/(root)** and save.
+4. GitHub publishes commits pushed to `main`. The published address is shown on the Pages settings screen; for this repository it is normally `https://lokesh807-gmail.github.io/impossible-captcha/`.
+5. Check **Actions** or **Settings → Pages** for the latest Pages build/deployment status. Open the published URL after it finishes and verify the change.
 
-### 2. Upload the project files
-
-1. In the new repository, click **Add file**, then **Upload files**.
-2. In File Explorer, open the game folder. If `.gitignore` and `.nojekyll` are not visible, turn on **View → Show → Hidden items**.
-3. Select the project files and folders. Make sure `index.html` is at the repository root—not inside an extra `Game` or `impossible-captcha` folder.
-4. Upload `index.html`, `style.css`, `game-core.js`, `script.js`, `README.md`, `.gitignore`, `.nojekyll`, `netlify.toml`, and the `tests` folder. Do not upload passwords, tokens, `.env` files, or other secrets.
-5. Enter a commit message such as `Add Impossible CAPTCHA game`, then click **Commit changes**.
-
-### 3. Enable GitHub Pages
-
-1. In the repository, click **Settings**.
-2. In the left sidebar under **Code and automation**, click **Pages**.
-3. Under **Build and deployment**, set **Source** to **Deploy from a branch**.
-4. Select the **main** branch and the **/ (root)** folder.
-5. Click **Save**.
-
-### 4. Open and check the published game
-
-Wait a few minutes for the initial publish. The repository's **Settings → Pages** screen will display the site address when it is ready. The expected address is:
-
-`https://YOUR-USERNAME.github.io/impossible-captcha/`
-
-Replace `YOUR-USERNAME` with your GitHub username. Open the address and try starting a challenge, submitting an answer, opening the level map, and refreshing the page to check that progress remains saved in that browser.
-
-If the `impossible-captcha` repository already exists, do not create a duplicate. Open the existing repository, select **Add file → Upload files** (or open its `/upload` page), and upload the files there. If you have access to the repository named in your instructions, its upload page is `https://github.com/lokesh807-gmail/impossible-captcha/upload`.
-
-This project uses relative asset paths (`./style.css`, `./game-core.js`, and `./script.js`) so the site works under the repository's `/impossible-captcha/` path. It has no server routes, so refreshing the page works without a backend rewrite.
+If Pages is already set to **main / (root)**, leave it as-is. No Actions workflow is needed for this static site. Do not switch the source to GitHub Actions unless you deliberately add and configure an Actions deployment later.
 
 ### Publish updates from VS Code
 
-If you clone the repository and open that clone in VS Code:
+1. Edit the game in this repository folder and test it locally with Live Server.
+2. Review the pending changes and make sure no secrets or unrelated files are included:
 
-1. Edit and save the files in the cloned repository folder.
-2. Click the **Source Control** icon in the left sidebar.
-3. Review the changed files. Click the **+** next to each file or next to **Changes** to stage the updates.
-4. Enter a commit message, such as `Add more puzzle levels`, and click **Commit**.
-5. Click **Sync Changes** or **Push** to send your commit to GitHub. Confirm if asked.
-6. GitHub Pages automatically republishes commits pushed to the configured `main` branch. Wait a few minutes, then refresh the published site.
+   ```sh
+   git status
+   git diff
+   ```
 
-This project folder is not currently connected to a Git repository. To use this VS Code workflow, create the repository, use **Code → Copy URL** on GitHub, clone it in VS Code with **Clone Repository**, then copy the game files into the cloned folder. You can also use GitHub's **Add file → Upload files** option to publish later changes manually.
+3. Stage, commit, and push the verified changes:
 
-### Upload later updates on GitHub.com
+   ```sh
+   git add .
+   git commit -m "Update Impossible CAPTCHA questions"
+   git push
+   ```
 
-1. Open the repository and click **Add file → Upload files**.
-2. Choose or drag the updated files into the upload area. Keep `index.html` at the repository root and preserve the existing folder layout.
-3. Enter a commit message and click **Commit changes**.
-4. GitHub Pages automatically starts publishing the new commit from the configured branch. Wait for deployment to finish, then refresh the website.
+These commands assume the correct repository and publishing branch are already configured. This checkout currently has `origin` set to the repository above and is on `main`; check `git remote -v` and `git branch --show-current` before pushing if you switch folders or branches. Saving files locally does not publish them. A commit must be pushed to the configured branch before Pages updates.
+
+### Publish an update on GitHub.com
+
+1. Open the existing repository and choose **Add file → Upload files** (or edit an existing file in GitHub).
+2. Upload or edit only the intended files, keeping `index.html` and the other site files at the repository root.
+3. Review the changes, enter a commit message, and commit directly to `main` if that is the configured Pages branch.
+4. Wait for the Pages deployment to finish, then open the URL shown in **Settings → Pages** and check the update.
+
+Never upload `.env` files, passwords, access tokens, private keys, or other secrets. `.gitignore` excludes common secret files from Git, but always review the upload/staging list yourself.
 
 ## Run locally and test
 
@@ -103,9 +88,17 @@ The test suite checks the exact 100-level sequence, unique questions and titles,
 
 ## Level data and difficulty
 
-The `LEVELS` array and its matching `DIFFICULTIES` list in `game-core.js` are the authoritative catalog. Levels 1–50 keep the original sequence. Levels 51–100 use the sequence specified for the expansion. The game validates the catalog at startup and tests validate the exact expected sequence.
+`level-data.js` is the question source. It contains exactly 100 entries in level order. Each entry has a unique title and question, category, challenge type, instructions, hint, explanation, answer, and funny success and failure messages. Add options for multiple-choice puzzles or labeled `objects` for interactive puzzles. Grid and sequence answers use zero-based object indexes. The final entry is the HUMAN word puzzle.
 
-To revise a level, edit its `makeLevel(...)` entry. Keep IDs consecutive, titles and questions unique, and answers consistent with the challenge type. Supported types are `multiple-choice`, `text`, `grid`, `order`, `memory`, and `runaway`. Each level needs instructions, a useful hint, an explanation, success and failure messages, and difficulty-based points. Interactive levels also need an `objects` array; interactive answers use zero-based indexes. Run the test suite after edits. The game intentionally remains at exactly 100 levels unless you update the difficulty list, total validation, and tests too.
+`game-core.js` assigns the difficulty and points from the authoritative sequence. Levels 1–50 retain their original order; Levels 51–100 follow the requested sequence. Each difficulty level awards its existing base points. IDs are assigned consecutively from the entry order, so insert or remove levels only if you also intentionally update the 100-level difficulty list, progression, and tests.
+
+After editing question data, run:
+
+```sh
+node --test tests/game.test.js
+```
+
+The checks validate the catalog size, IDs, unique questions and titles, every requested category, the difficulty labels, answer options, interactive references, answer acceptance and rejection, and progression/scoring rules.
 
 ## Scoring and progression
 

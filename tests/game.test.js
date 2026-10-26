@@ -12,7 +12,7 @@ const REQUIRED_SEQUENCE = [
   "medium", "easy", "hard", "medium", "easy", "hard", "medium", "hard", "easy", "hard",
   "hard", "medium", "easy", "hard", "medium", "easy", "medium", "hard", "easy", "medium",
   "hard", "easy", "medium", "hard", "medium", "easy", "hard", "medium", "easy", "hard",
-  "medium", "easy", "hard", "medium", "easy", "hard", "medium", "easy", "hard", "medium",
+  "medium", "easy", "hard", "medium", "hard", "hard", "medium", "easy", "hard", "medium",
   "easy", "medium", "hard", "hard", "medium", "easy", "hard", "medium", "easy", "hard",
   "medium", "easy", "hard", "medium", "easy", "hard", "medium", "easy", "hard", "hard"
 ];
@@ -27,6 +27,18 @@ test("catalog contains exactly 100 unique consecutive levels in both required di
   assert.deepEqual(core.LEVELS.map(level => level.difficulty), REQUIRED_SEQUENCE);
   assert.equal(new Set(core.LEVELS.map(level => level.title)).size, 100);
   assert.equal(new Set(core.LEVELS.map(level => level.question)).size, 100);
+  assert.equal(core.LEVELS[99].finalBoss, true);
+});
+
+test("question categories cover all requested puzzle styles", () => {
+  const requiredCategories = [
+    "brainless", "common-sense", "riddle", "tricky-multiple-choice", "misleading-instruction",
+    "reverse-psychology", "funny-math", "odd-one-out", "visual-observation", "pattern-recognition",
+    "unexpected-answer", "wordplay", "silly-situation", "button-challenge", "emoji-puzzle",
+    "memory", "follow-instructions", "impossible-sounding", "obvious-hidden", "harmless-prank",
+    "sequence", "multi-step", "find-difference", "funny-logic", "mini-game"
+  ];
+  assert.deepEqual([...new Set(core.LEVELS.map(level => level.category))].sort(), requiredCategories.sort());
 });
 
 test("all supported puzzle types appear and every level accepts its solution but rejects a wrong one", () => {
@@ -44,12 +56,27 @@ test("all supported puzzle types appear and every level accepts its solution but
   }
 });
 
+test("each multiple-choice puzzle has one valid displayed answer and rejects its other options", () => {
+  for (const level of core.LEVELS.filter(item => item.type === "multiple-choice")) {
+    const matchingOptions = level.options.filter(option => level.caseSensitive
+      ? option === level.answer
+      : core.normalizeText(option) === core.normalizeText(level.answer));
+    assert.equal(matchingOptions.length, 1, `Level ${level.id} must have exactly one correct option`);
+    for (const option of level.options) {
+      if (option !== matchingOptions[0]) {
+        assert.equal(core.validateAnswer(level, option), false, `Level ${level.id} must reject ${option}`);
+      }
+    }
+  }
+});
+
 test("grid validation requires exactly the intended unique selection", () => {
-  const level = core.LEVELS[9];
-  assert.equal(core.validateAnswer(level, [3, 1]), true);
-  assert.equal(core.validateAnswer(level, [1, 3, 3]), true);
-  assert.equal(core.validateAnswer(level, [1]), false);
-  assert.equal(core.validateAnswer(level, [1, 2, 3]), false);
+  const level = core.LEVELS.find(item => item.type === "grid" && item.answer.length > 1);
+  const correct = [...level.answer];
+  assert.equal(core.validateAnswer(level, [...correct].reverse()), true);
+  assert.equal(core.validateAnswer(level, [...correct, correct[0]]), true);
+  assert.equal(core.validateAnswer(level, correct.slice(1)), false);
+  assert.equal(core.validateAnswer(level, [...correct, 99]), false);
 });
 
 test("locked levels remain inaccessible until completion or skip unlocks the next one", () => {

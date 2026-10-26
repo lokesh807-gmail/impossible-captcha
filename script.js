@@ -260,7 +260,7 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "runaway-button";
-      button.textContent = "OPEN";
+      button.textContent = level.answer;
       let hasDodged = false;
       button.addEventListener("pointerenter", () => {
         if (hasDodged) return;
@@ -268,7 +268,7 @@
         button.style.left = `${10 + Math.floor(Math.random() * 68)}%`;
         button.style.top = `${14 + Math.floor(Math.random() * 58)}%`;
       });
-      button.addEventListener("click", () => { submission = "OPEN"; submitCurrentAnswer(); });
+      button.addEventListener("click", () => { submission = button.textContent; submitCurrentAnswer(); });
       stage.append(button);
       area.append(stage);
     }
@@ -317,6 +317,7 @@
     const answer = currentLevel.type === "text" ? ($("#text-answer") ? $("#text-answer").value : submission) : submission;
     const updatedAttempt = recordAttempt(state, currentLevel.id);
     replaceState(updatedAttempt);
+    $("#attempt-count").textContent = `Attempts this level: ${state.attemptsByLevel[currentLevel.id]}`;
     const feedback = $("#feedback");
     feedback.classList.remove("hidden", "feedback-success", "feedback-error");
     if (validateAnswer(currentLevel, answer)) {
@@ -340,13 +341,12 @@
     } else {
       playTone("incorrect");
       feedback.classList.add("feedback-error");
-      feedback.innerHTML = `<strong>${escapeHtml(currentLevel.failureMessage)}</strong><span>Nothing was deducted — try again.</span><span>${escapeHtml(currentLevel.explanation)}</span>`;
+      feedback.innerHTML = `<strong>${escapeHtml(currentLevel.failureMessage)}</strong><span>Nothing was deducted — try again. The hint is available if you need a clue.</span>`;
       $("#after-answer").classList.remove("hidden");
       $("#retry-button").classList.remove("hidden");
       $("#challenge-card").classList.remove("shake");
       void $("#challenge-card").offsetWidth;
       $("#challenge-card").classList.add("shake");
-      $("#attempt-count").textContent = `Attempts this level: ${state.attemptsByLevel[currentLevel.id]}`;
     }
   }
 
